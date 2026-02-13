@@ -105,7 +105,7 @@ export default function Tour() {
         defaultZoomLvl: 45,
         mousewheel: true,
         plugins: [[MarkersPlugin, { markers: buildMarkers("library-entrance") }]],
-        navbar: ["zoom", "move", "fullscreen"],
+        navbar: false,
       });
 
       viewerRef.current = viewer;
@@ -164,7 +164,7 @@ export default function Tour() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div ref={containerRef} className="h-[65vh] min-h-[420px] w-full" />
+        <div ref={containerRef} className="h-[78vh] min-h-[420px] w-full" />
       </div>
 
       {loading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
