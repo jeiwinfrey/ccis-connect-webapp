@@ -5,47 +5,234 @@ import { Switch } from "./ui/switch";
 import { Button } from "./ui/button";
 import Image from "next/image";
 
-type SceneId = "library-entrance" | "main-hall";
+type SceneId =
+  | "lobby"
+  | "dit-entrance"
+  | "deans-office-entrance"
+  | "hyflex1-entrance"
+  | "DIT-intersection-1st"
+  | "100B-entrance"
+  | "IT-stairs"
+  | "100A-entrance";
+type ArrowDirection = "left" | "right" | "down" | "up";
 
 type SceneConfig = {
   id: SceneId;
   title: string;
   panorama: string;
+  startYaw: string;
+  startPitch: string;
   arrows: Array<{
     id: string;
     pitch: string;
     yaw: string;
     target: SceneId;
     label: string;
+    arrow: ArrowDirection;
   }>;
 };
 
+const TABLER_ARROW_SVGS: Record<ArrowDirection, string> = {
+  left:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m5 12 6 6"></path><path d="m5 12 6 -6"></path></svg>',
+  right:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 18 6 -6"></path><path d="m13 6 6 6"></path></svg>',
+  up:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m18 11 -6 -6"></path><path d="m6 11 6 -6"></path></svg>',
+  down:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m18 13 -6 6"></path><path d="m6 13 6 6"></path></svg>',
+};
+
 const SCENES: Record<SceneId, SceneConfig> = {
-  "library-entrance": {
-    id: "library-entrance",
-    title: "Library Entrance",
-    panorama: "/panoramic-images/kris-guico-rsB-he-ye7w-unsplash.jpg",
+  "lobby": {
+    id: "lobby",
+    title: "Lobby",
+    panorama: "/panoramic-images/lobby.JPG",
+    startYaw: "-70deg",
+    startPitch: "0deg",
     arrows: [
       {
-        id: "to-main-hall",
+        id: "to-dit-entrance",
         pitch: "-4deg",
-        yaw: "34deg",
-        target: "main-hall",
-        label: "Main Hall",
+        yaw: "-30deg",
+        target: "dit-entrance",
+        label: "DIT Entrance",
+        arrow: "right",
+      },
+      {
+        id: "to-deans-office-entrance",
+        pitch: "-4deg",
+        yaw: "-110deg",
+        target: "deans-office-entrance",
+        label: "Dean's Office Entrance",
+        arrow: "left",
       },
     ],
   },
-  "main-hall": {
-    id: "main-hall",
-    title: "Main Hall",
-    panorama: "/panoramic-images/timothy-oldfield-luufnHoChRU-unsplash.jpg",
+  "dit-entrance": {
+    id: "dit-entrance",
+    title: "DIT Entrance",
+    panorama: "/panoramic-images/DIT-entrance.JPG",
+    startYaw: "-70deg",
+    startPitch: "0deg",
     arrows: [
       {
-        id: "to-entrance",
+        id: "to-hyflex1-entrance",
+        pitch: "-20deg",
+        yaw: "-70deg",
+        target: "hyflex1-entrance",
+        label: "Hyflex 1 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-lobby",
+        pitch: "-14deg",
+        yaw: "70deg",
+        target: "lobby",
+        label: "Lobby",
+        arrow: "up",
+      },
+      {
+        id: "to-deans-office-entrance",
+        pitch: "-15deg",
+        yaw: "110deg",
+        target: "deans-office-entrance",
+        label: "Dean's Office Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "deans-office-entrance": {
+    id: "deans-office-entrance",
+    title: "Dean's Office Entrance",
+    panorama: "/panoramic-images/deans-office-entrance.JPG",
+    startYaw: "-60deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-dct-entrance",
         pitch: "-4deg",
-        yaw: "-138deg",
-        target: "library-entrance",
-        label: "Entrance",
+        yaw: "-30deg",
+        target: "dit-entrance",
+        label: "DCT Entrance",
+        arrow: "right",
+      },
+    ],
+  },
+  "hyflex1-entrance": {
+    id: "hyflex1-entrance",
+    title: "Hyflex 1 Entrance",
+    panorama: "/panoramic-images/hyflex1-entrance.JPG",
+    startYaw: "-150deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-dit-intersection-1st",
+        pitch: "-20deg",
+        yaw: "-150deg",
+        target: "DIT-intersection-1st",
+        label: "DIT Intersection 1st",
+        arrow: "up",
+      },
+      {
+        id: "to-dit-entrance",
+        pitch: "-20deg",
+        yaw: "30deg",
+        target: "dit-entrance",
+        label: "DIT Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "DIT-intersection-1st": {
+    id: "DIT-intersection-1st",
+    title: "DIT Intersection 1st",
+    panorama: "/panoramic-images/IT-intersection-1st.JPG",
+    startYaw: "-100deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-100b-entrance",
+        pitch: "-14deg",
+        yaw: "-145deg",
+        target: "100B-entrance",
+        label: "100B Entrance",
+        arrow: "left",
+      },
+      {
+        id: "to-it-stairs",
+        pitch: "-14deg",
+        yaw: "-60deg",
+        target: "IT-stairs",
+        label: "IT Stairs",
+        arrow: "right",
+      },
+      {
+        id: "to-hyflex1-entrance",
+        pitch: "-20deg",
+        yaw: "90deg",
+        target: "hyflex1-entrance",
+        label: "Hyflex 1 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "100B-entrance": {
+    id: "100B-entrance",
+    title: "100B Entrance",
+    panorama: "/panoramic-images/100B-entrance.JPG",
+    startYaw: "-150deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-100a-entrance",
+        pitch: "-20deg",
+        yaw: "-150deg",
+        target: "100A-entrance",
+        label: "100A Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-it-intersection-1st",
+        pitch: "-20deg",
+        yaw: "30deg",
+        target: "DIT-intersection-1st",
+        label: "IT Intersection 1st",
+        arrow: "up",
+      },
+    ],
+  },
+  "100A-entrance": {
+    id: "100A-entrance",
+    title: "100A Entrance",
+    panorama: "/panoramic-images/100A-entrance.JPG",
+    startYaw: "-90deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-100b-entrance",
+        pitch: "-20deg",
+        yaw: "-90deg",
+        target: "100B-entrance",
+        label: "100B Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "IT-stairs": {
+    id: "IT-stairs",
+    title: "IT Stairs",
+    panorama: "/panoramic-images/IT-stairs.JPG",
+    startYaw: "20deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-it-intersection-1st-from-stairs",
+        pitch: "-30deg",
+        yaw: "-2deg",
+        target: "DIT-intersection-1st",
+        label: "IT Intersection 1st",
+        arrow: "up",
       },
     ],
   },
@@ -54,7 +241,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
 export default function Tour() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<{ destroy: () => void } | null>(null);
-  const sceneRef = useRef<SceneId>("library-entrance");
+  const sceneRef = useRef<SceneId>("lobby");
   const [loading, setLoading] = useState(true);
   const [is3D, setIs3D] = useState(true);
   const [selectedFloor, setSelectedFloor] = useState<"1st" | "2nd">("1st");
@@ -88,7 +275,7 @@ export default function Tour() {
             pitch: arrow.pitch,
             yaw: arrow.yaw,
           },
-          html: '<div class="tour-scene-arrow-inner">&#10140;</div>',
+          html: `<div class="tour-scene-arrow-inner">${TABLER_ARROW_SVGS[arrow.arrow]}</div>`,
           size: {
             width: 42,
             height: 42,
@@ -107,23 +294,25 @@ export default function Tour() {
 
       const viewer = new Viewer({
         container: containerRef.current,
-        panorama: SCENES["library-entrance"].panorama,
-        caption: SCENES["library-entrance"].title,
-        defaultYaw: "0deg",
-        defaultPitch: "0deg",
-        defaultZoomLvl: 45,
+        panorama: SCENES["lobby"].panorama,
+        caption: SCENES["lobby"].title,
+        defaultYaw: SCENES["lobby"].startYaw,
+        defaultPitch: SCENES["lobby"].startPitch,
+        defaultZoomLvl: 0,
         mousewheel: true,
-        plugins: [[MarkersPlugin, { markers: buildMarkers("library-entrance") }]],
+        plugins: [[MarkersPlugin, { markers: buildMarkers("lobby") }]],
         navbar: false,
       });
 
       viewerRef.current = viewer;
-      sceneRef.current = "library-entrance";
+      sceneRef.current = "lobby";
 
       const markersPlugin = viewer.getPlugin(MarkersPlugin);
 
       const onSelectMarker = async (event: Event) => {
-        const marker = (event as { marker?: { data?: { targetScene?: SceneId } } }).marker;
+        const marker = (event as {
+          marker?: { data?: { targetScene?: SceneId } };
+        }).marker;
         const targetScene = marker?.data?.targetScene;
 
         if (!targetScene || targetScene === sceneRef.current) {
@@ -134,8 +323,17 @@ export default function Tour() {
 
         await viewer.setPanorama(SCENES[targetScene].panorama, {
           caption: SCENES[targetScene].title,
+          position: {
+            yaw: SCENES[targetScene].startYaw,
+            pitch: SCENES[targetScene].startPitch,
+          },
+          zoom: 0,
           speed: "18rpm",
-          transition: true,
+          transition: {
+            effect: "fade",
+            rotation: false,
+            speed: 800,
+          },
           showLoader: true,
         });
 
