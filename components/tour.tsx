@@ -8,6 +8,8 @@ import Image from "next/image";
 type SceneId =
   | "lobby"
   | "dit-entrance"
+  | "cs-intersection-1st"
+  | "dct-entrance"
   | "deans-office-entrance"
   | "hyflex1-entrance"
   | "DIT-intersection-1st"
@@ -102,6 +104,14 @@ const SCENES: Record<SceneId, SceneConfig> = {
       },
     ],
   },
+  "cs-intersection-1st": {
+    id: "cs-intersection-1st",
+    title: "CS Intersection 1st",
+    panorama: "/panoramic-images/CS-intersection-1st.JPG",
+    startYaw: "0deg",
+    startPitch: "0deg",
+    arrows: [],
+  },
   "deans-office-entrance": {
     id: "deans-office-entrance",
     title: "Dean's Office Entrance",
@@ -111,13 +121,35 @@ const SCENES: Record<SceneId, SceneConfig> = {
     arrows: [
       {
         id: "to-dct-entrance",
-        pitch: "-4deg",
-        yaw: "-30deg",
-        target: "dit-entrance",
+        pitch: "-20deg",
+        yaw: "-60deg",
+        target: "dct-entrance",
         label: "DCT Entrance",
-        arrow: "right",
+        arrow: "up",
       },
     ],
+  },
+  "dct-entrance": {
+    id: "dct-entrance",
+    title: "DCT Entrance",
+    panorama: "/panoramic-images/DCT-entrance.JPG",
+    startYaw: "-110deg",
+    startPitch: "0deg",
+    arrows: [{
+      id: "to-cs-intersection-1st",
+      pitch: "-20deg",
+      yaw: "-110deg",
+      target: "cs-intersection-1st",
+      label: "CS Intersection 1st",
+      arrow: "up",
+    }, {
+      id: "to-deans-office-entrance",
+      pitch: "-20deg",
+      yaw: "70deg",
+      target: "deans-office-entrance",
+      label: "Dean's Office Entrance",
+      arrow: "up",
+    }],
   },
   "hyflex1-entrance": {
     id: "hyflex1-entrance",
