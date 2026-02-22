@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle2 } from "lucide-react";
+import { IconCircleCheck } from "@tabler/icons-react";
 
 type Room = {
   id: string;
@@ -50,7 +50,7 @@ function RoomDialog({ room, open, onClose }: { room: Room | null; open: boolean;
         {confirmed ? (
           <div className="flex flex-col items-center text-center gap-4 py-4">
             <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="text-green-500 w-8 h-8" />
+              <IconCircleCheck className="text-green-500 w-8 h-8" />
             </div>
             <div>
               <h2 className="text-xl font-bold">Reservation Confirmed!</h2>
