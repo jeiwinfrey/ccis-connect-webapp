@@ -1,4 +1,4 @@
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/ui/navbar";
 import ReserveRoom from "@/components/reserve-room";
 
 export default function Page() {

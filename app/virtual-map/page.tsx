@@ -1,4 +1,4 @@
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/ui/navbar";
 import Tour from "@/components/tour";
 
 export default function Page() {

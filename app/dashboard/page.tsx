@@ -1,4 +1,4 @@
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/ui/navbar";
 import User from "@/components/user";
 
 export default function Page() {
