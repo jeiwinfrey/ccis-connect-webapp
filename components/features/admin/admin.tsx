@@ -34,7 +34,6 @@ export default function Admin() {
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [newDepartment, setNewDepartment] = useState("");
-  const [newRole, setNewRole] = useState<"admin" | "super_admin">("admin");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = users.filter(row =>
@@ -48,13 +47,12 @@ export default function Admin() {
       await mutations.createUser({
         name: newName.trim(),
         email: newEmail.trim(),
-        role: newRole,
+        role: "admin",
         department: newDepartment.trim() || "CCIS",
       });
       setNewName("");
       setNewEmail("");
       setNewDepartment("");
-      setNewRole("admin");
       setAddOpen(false);
       refetch();
       toast.success("Administrator added");
@@ -197,25 +195,6 @@ export default function Admin() {
                 value={newDepartment}
                 onChange={e => setNewDepartment(e.target.value)}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Role</Label>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={newRole === "admin" ? "default" : "outline"}
-                  onClick={() => setNewRole("admin")}
-                >
-                  Admin
-                </Button>
-                <Button
-                  size="sm"
-                  variant={newRole === "super_admin" ? "default" : "outline"}
-                  onClick={() => setNewRole("super_admin")}
-                >
-                  Super Admin
-                </Button>
-              </div>
             </div>
           </div>
           <DialogFooter>
