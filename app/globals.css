@@ -123,4 +123,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Global focus-visible fallback for custom interactive elements */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring/50;
+  }
+  /* Skip-to-content link */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium;
+  }
 }
