@@ -27,7 +27,7 @@ export default function RoomManagement() {
   const { rooms, loading, refetch } = useRooms();
   const mutations = useRoomMutations();
   const [search, setSearch] = useState("");
-  const [floorFilter, setFloorFilter] = useState("");
+  const [floorFilter, setFloorFilter] = useState("__all__");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Room | null>(null);
@@ -126,7 +126,7 @@ export default function RoomManagement() {
   const filtered = rooms.filter((r) => {
     const matchSearch = [r.room_number, r.name, r.type]
       .some((v) => v.toLowerCase().includes(search.toLowerCase()));
-    const matchFloor = !floorFilter || r.floor === floorFilter;
+    const matchFloor = floorFilter === "__all__" || r.floor === floorFilter;
     return matchSearch && matchFloor;
   });
 
@@ -168,7 +168,7 @@ export default function RoomManagement() {
                   <SelectValue placeholder="All Floors" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Floors</SelectItem>
+                   <SelectItem value="__all__">All Floors</SelectItem>
                   {floors.map((f) => (
                     <SelectItem key={f} value={f}>{f}</SelectItem>
                   ))}
