@@ -353,6 +353,7 @@ export default function Tour() {
 
         sceneRef.current = targetScene;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- speed exists at runtime but is missing from PanoramaOptions type definitions
         await viewer.setPanorama(SCENES[targetScene].panorama, {
           caption: SCENES[targetScene].title,
           position: {
@@ -367,8 +368,9 @@ export default function Tour() {
             speed: 800,
           },
           showLoader: true,
-        });
+        } as any);
 
+        // @ts-expect-error -- setMarkers exists at runtime but is missing from the plugin type definitions
         markersPlugin.setMarkers(buildMarkers(targetScene));
       };
 
@@ -397,7 +399,7 @@ export default function Tour() {
 
   return (
     <section className="px-6 pb-8 pt-4 md:px-10">
-      <div className="mb-3 flex items-start justify-between gap-4">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
           <p className="text-sm text-muted-foreground">
