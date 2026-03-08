@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { type EquipmentItem, type Unit, conditionColor } from "./types";
 
@@ -32,7 +33,7 @@ export function UnitPickerDialog({
   if (!item) return null;
 
   const availableUnits = item.units.filter((u) => u.status === "available");
-  const loanedUnits = item.units.filter((u) => u.status === "on-loan");
+  const loanedUnits = item.units.filter((u) => u.status !== "available");
   const selectedUnit = item.units.find((u) => u.unitId === selected) ?? null;
 
   function handleContinue() {
@@ -49,25 +50,28 @@ export function UnitPickerDialog({
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/40">
           <p className="text-xs text-muted-foreground">
-            {categoryEmoji} {categoryName} · Pick a unit below
+            {categoryEmoji} {categoryName} &middot; Pick a unit below
           </p>
           <DialogTitle className="text-xl">{item.model}</DialogTitle>
+          <DialogDescription className="sr-only">Select an available unit to borrow.</DialogDescription>
           <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
             <span className="text-emerald-600 font-medium">{availableUnits.length} available</span>
-            <span>·</span>
+            <span>&middot;</span>
             <span className="text-orange-500 font-medium">{loanedUnits.length} on loan</span>
           </div>
         </DialogHeader>
 
         <div className="px-6 py-4 space-y-5 max-h-[60vh] overflow-y-auto">
           {availableUnits.length > 0 && (
-            <div className="space-y-2">
+              <div className="space-y-2" role="radiogroup" aria-label="Available units">
               <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                ✓ Available ({availableUnits.length})
+                Available ({availableUnits.length})
               </p>
               {availableUnits.map((unit) => (
                 <button
                   key={unit.unitId}
+                  role="radio"
+                  aria-checked={selected === unit.unitId}
                   onClick={() => setSelected(unit.unitId)}
                   className={`w-full flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
                     selected === unit.unitId
@@ -87,7 +91,7 @@ export function UnitPickerDialog({
                     <p className="text-xs text-muted-foreground mt-0.5">{unit.notes}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-xs font-semibold ${conditionColor[unit.condition]}`}>
+                    <span className={`text-xs font-semibold ${conditionColor[unit.condition] ?? ""}`}>
                       {unit.condition.toUpperCase()}
                     </span>
                     <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">
@@ -102,7 +106,7 @@ export function UnitPickerDialog({
           {loanedUnits.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-orange-500 uppercase tracking-wide">
-                ⏳ On Loan ({loanedUnits.length})
+                On Loan / Maintenance ({loanedUnits.length})
               </p>
               {loanedUnits.map((unit) => (
                 <div
@@ -112,14 +116,18 @@ export function UnitPickerDialog({
                   <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground">{unit.unitId}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{unit.notes}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {unit.borrower && unit.dueBack
+                        ? `${unit.borrower} · Due back ${unit.dueBack}`
+                        : unit.notes}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-xs font-semibold ${conditionColor[unit.condition]}`}>
+                    <span className={`text-xs font-semibold ${conditionColor[unit.condition] ?? ""}`}>
                       {unit.condition.toUpperCase()}
                     </span>
                     <span className="text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-500/10 px-2 py-0.5 rounded-full">
-                      ON LOAN
+                      {unit.status === "maintenance" ? "MAINTENANCE" : "ON LOAN"}
                     </span>
                   </div>
                 </div>
@@ -137,7 +145,7 @@ export function UnitPickerDialog({
             )}
           </p>
           <Button onClick={handleContinue} disabled={!selected} className="gap-2">
-            Continue →
+            Continue
           </Button>
         </div>
       </DialogContent>
