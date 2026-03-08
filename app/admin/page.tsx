@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
     IconLayoutDashboard,
     IconBook,
@@ -15,9 +15,12 @@ import {
     IconX,
     IconPackages,
     IconCircleDotted,
+    IconSettings,
+    IconDoor,
+    IconChartBar,
 } from "@tabler/icons-react";
 
-import { Logo } from "@/public/logo";
+import { Logo } from "@/components/ui/logo";
 import {
     Sidebar,
     SidebarContent,
@@ -39,18 +42,21 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import Dashboard from "@/components/forms/admin/dashboard";
-import BorrowRequestPending from "@/components/forms/admin/borrow/borrow-request-pending";
-import BorrowRequestAccepted from "@/components/forms/admin/borrow/borrow-request-accepted";
-import BorrowRequestRejected from "@/components/forms/admin/borrow/borrow-request-rejected";
-import RoomReservationPending from "@/components/forms/admin/room/room-reservation-pending";
-import RoomReservationAccepted from "@/components/forms/admin/room/room-reservation-accepted";
-import RoomReservationRejected from "@/components/forms/admin/room/room-reservation-rejected";
-import EquipmentAvailable from "@/components/forms/admin/equipment/equipment-available";
-import EquipmentOnLoan from "@/components/forms/admin/equipment/equipment-on-loan";
-import EquipmentAll from "@/components/forms/admin/equipment/equipment-all";
-import History from "@/components/forms/admin/history";
-import Admin from "@/components/forms/admin/admin";
+import Dashboard from "@/components/features/admin/dashboard";
+import BorrowRequestPending from "@/components/features/admin/borrow/borrow-request-pending";
+import BorrowRequestAccepted from "@/components/features/admin/borrow/borrow-request-accepted";
+import BorrowRequestRejected from "@/components/features/admin/borrow/borrow-request-rejected";
+import RoomReservationPending from "@/components/features/admin/room/room-reservation-pending";
+import RoomReservationAccepted from "@/components/features/admin/room/room-reservation-accepted";
+import RoomReservationRejected from "@/components/features/admin/room/room-reservation-rejected";
+import EquipmentAvailable from "@/components/features/admin/equipment/equipment-available";
+import EquipmentOnLoan from "@/components/features/admin/equipment/equipment-on-loan";
+import EquipmentAll from "@/components/features/admin/equipment/equipment-all";
+import History from "@/components/features/admin/history";
+import Admin from "@/components/features/admin/admin";
+import EquipmentManagement from "@/components/features/admin/equipment/equipment-management";
+import RoomManagement from "@/components/features/admin/room/room-management";
+import Analytics from "@/components/features/admin/analytics";
 
 type ActiveSection =
     | "dashboard"
@@ -63,7 +69,10 @@ type ActiveSection =
     | "equipment-available"
     | "equipment-on-loan"
     | "equipment-all"
+    | "equipment-manage"
+    | "room-manage"
     | "history"
+    | "analytics"
     | "admin";
 
 const borrowSubItems = [
@@ -76,27 +85,31 @@ const roomSubItems = [
     { key: "room-pending" as ActiveSection, label: "Pending", icon: IconClock },
     { key: "room-accepted" as ActiveSection, label: "Accepted", icon: IconCheck },
     { key: "room-rejected" as ActiveSection, label: "Rejected", icon: IconX },
+    { key: "room-manage" as ActiveSection, label: "Manage Rooms", icon: IconDoor },
 ];
 
 const equipmentSubItems = [
     { key: "equipment-available" as ActiveSection, label: "Available", icon: IconCircleDotted },
     { key: "equipment-on-loan" as ActiveSection, label: "On Loan", icon: IconPackages },
     { key: "equipment-all" as ActiveSection, label: "All Units", icon: IconPackage },
+    { key: "equipment-manage" as ActiveSection, label: "Manage Inventory", icon: IconSettings },
 ];
 
 function AdminSidebar({
     active,
     setActive,
+    onLogout,
 }: {
     active: ActiveSection;
     setActive: (s: ActiveSection) => void;
+    onLogout: () => void;
 }) {
     const isBorrowActive = active.startsWith("borrow");
     const isRoomActive = active.startsWith("room");
     const isEquipActive = active.startsWith("equipment");
 
     return (
-        <Sidebar collapsible="icon">
+        <Sidebar collapsible="icon" aria-label="Admin sidebar">
             {/* Header: Logo + Brand */}
             <SidebarHeader className="py-4 px-3">
                 <div className="flex items-center gap-2 px-1">
@@ -228,6 +241,16 @@ function AdminSidebar({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                         <SidebarMenuButton
+                            isActive={active === "analytics"}
+                            onClick={() => setActive("analytics")}
+                            tooltip="Analytics"
+                        >
+                            <IconChartBar />
+                            <span>Analytics</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
                             isActive={active === "admin"}
                             onClick={() => setActive("admin")}
                             tooltip="Admin"
@@ -240,12 +263,10 @@ function AdminSidebar({
                         <SidebarMenuButton
                             tooltip="Logout"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            asChild
+                            onClick={onLogout}
                         >
-                            <Link href="/">
-                                <IconLogout />
-                                <span>Logout</span>
-                            </Link>
+                            <IconLogout />
+                            <span>Logout</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -270,14 +291,20 @@ function ContentArea({ active }: { active: ActiveSection }) {
             return <RoomReservationAccepted />;
         case "room-rejected":
             return <RoomReservationRejected />;
+        case "room-manage":
+            return <RoomManagement />;
         case "equipment-available":
             return <EquipmentAvailable />;
         case "equipment-on-loan":
             return <EquipmentOnLoan />;
         case "equipment-all":
             return <EquipmentAll />;
+        case "equipment-manage":
+            return <EquipmentManagement />;
         case "history":
             return <History />;
+        case "analytics":
+            return <Analytics />;
         case "admin":
             return <Admin />;
         default:
@@ -287,6 +314,12 @@ function ContentArea({ active }: { active: ActiveSection }) {
 
 export default function AdminPage() {
     const [active, setActive] = useState<ActiveSection>("dashboard");
+    const router = useRouter();
+
+    async function handleLogout() {
+        await fetch("/api/auth/logout", { method: "POST" });
+        router.push("/");
+    }
 
     const breadcrumb: Record<ActiveSection, string[]> = {
         dashboard: ["Dashboard"],
@@ -296,10 +329,13 @@ export default function AdminPage() {
         "room-pending": ["Room Reservations", "Pending"],
         "room-accepted": ["Room Reservations", "Accepted"],
         "room-rejected": ["Room Reservations", "Rejected"],
+        "room-manage": ["Room Reservations", "Manage Rooms"],
         "equipment-available": ["Equipment Inventory", "Available"],
         "equipment-on-loan": ["Equipment Inventory", "On Loan"],
         "equipment-all": ["Equipment Inventory", "All Units"],
+        "equipment-manage": ["Equipment Inventory", "Manage Inventory"],
         history: ["History"],
+        analytics: ["Analytics"],
         admin: ["Admin"],
     };
 
@@ -308,26 +344,29 @@ export default function AdminPage() {
     return (
         <TooltipProvider>
             <SidebarProvider>
-                <AdminSidebar active={active} setActive={setActive} />
+                <a href="#main-content" className="skip-link">Skip to main content</a>
+                <AdminSidebar active={active} setActive={setActive} onLogout={handleLogout} />
                 <SidebarInset>
                     {/* Top bar */}
                     <header className="flex h-14 items-center gap-3 border-b border-border/60 px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
                         <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
                         <div className="h-4 w-px bg-border" />
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 flex-wrap">
                             {crumbs.map((crumb, i) => (
                                 <span key={i} className="flex items-center gap-1.5">
-                                    {i > 0 && <span className="text-muted-foreground text-sm">/</span>}
-                                    <span className={`text-sm ${i === crumbs.length - 1 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                                    {i > 0 && <span className="text-muted-foreground text-sm" aria-hidden="true">/</span>}
+                                    <span className={`text-sm ${i === crumbs.length - 1 ? "text-foreground font-medium" : "text-muted-foreground"}`} aria-current={i === crumbs.length - 1 ? "page" : undefined}>
                                         {crumb}
                                     </span>
                                 </span>
                             ))}
-                        </div>
+                        </nav>
                     </header>
 
                     {/* Main content */}
-                    <ContentArea active={active} />
+                    <main id="main-content">
+                        <ContentArea active={active} />
+                    </main>
                 </SidebarInset>
             </SidebarProvider>
         </TooltipProvider>

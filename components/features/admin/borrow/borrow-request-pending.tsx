@@ -1,0 +1,240 @@
+"use client";
+
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
+import { useState } from "react";
+import { IconCheck, IconX, IconFileText, IconLoader2 } from "@tabler/icons-react";
+import { toast } from "sonner";
+import { useBorrowRequests, useBorrowMutations } from "@/hooks/useBorrowRequests";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import type { BorrowRequestWithDetails } from "@/lib/supabase/types";
+
+export default function BorrowRequestPending() {
+  const { requests, loading, refetch } = useBorrowRequests("pending");
+  const mutations = useBorrowMutations();
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<BorrowRequestWithDetails | null>(null);
+
+  const filtered = requests.filter(row => {
+    const userName = row.users?.name ?? "";
+    const unitId = row.equipment_units?.unit_id ?? "";
+    const modelName = row.equipment_units?.equipment_models?.model_name ?? "";
+    return [userName, unitId, modelName]
+      .some(v => v.toLowerCase().includes(search.toLowerCase()));
+  });
+
+  async function handleApprove(id: string) {
+    try {
+      await mutations.updateBorrowRequest(id, { status: "accepted" });
+      setSelected(null);
+      refetch();
+      toast.success("Borrow request approved");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to approve request");
+    }
+  }
+
+  async function handleReject(id: string) {
+    try {
+      await mutations.updateBorrowRequest(id, { status: "rejected" });
+      setSelected(null);
+      refetch();
+      toast.success("Borrow request rejected");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to reject request");
+    }
+  }
+
+  return (
+    <>
+      <div className="flex flex-col gap-6 p-6 md:p-8">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Borrow Requests — Pending</h1>
+          <p className="text-sm text-muted-foreground">Review and act on pending equipment borrow requests.</p>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <div className="flex items-center gap-2 font-semibold text-sm">
+              Pending Requests
+              <Badge variant="destructive" className="rounded-full px-2 py-0.5 text-xs">{filtered.length}</Badge>
+            </div>
+          </div>
+          <div className="p-5 space-y-4">
+            <Input
+              className="max-w-xs"
+              placeholder="Search by name, equipment..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+
+            {loading ? (
+              <div className="flex items-center justify-center py-10 text-muted-foreground">
+                <IconLoader2 className="size-5 animate-spin mr-2" /> Loading...
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Requestor</TableHead>
+                      <TableHead>Equipment</TableHead>
+                      <TableHead>Unit ID</TableHead>
+                      <TableHead>Borrow Date</TableHead>
+                      <TableHead>Return Date</TableHead>
+                      <TableHead>Submitted</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground text-sm">
+                          No pending requests found.
+                        </TableCell>
+                      </TableRow>
+                    ) : filtered.map((row) => (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          <div className="font-semibold text-sm">{row.users?.name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground">{row.users?.student_id ?? row.users?.email ?? ""}</div>
+                        </TableCell>
+                        <TableCell className="text-sm">{row.equipment_units?.equipment_models?.model_name ?? "—"}</TableCell>
+                        <TableCell className="text-sm font-mono">{row.equipment_units?.unit_id ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{row.start_date}</TableCell>
+                        <TableCell className="text-sm">{row.end_date}</TableCell>
+                        <TableCell className="text-sm">{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell><StatusBadge status={row.status} /></TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 px-2.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => handleApprove(row.id)}
+                              disabled={mutations.loading}
+                            >
+                              <IconCheck className="size-3.5" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 px-2.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleReject(row.id)}
+                              disabled={mutations.loading}
+                            >
+                              <IconX className="size-3.5" />
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2.5 text-xs"
+                              onClick={() => setSelected(row)}
+                            >
+                              <IconFileText className="size-3.5" />
+                              Detail
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Detail Dialog */}
+      <Dialog open={!!selected} onOpenChange={open => !open && setSelected(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Borrow Request Detail</DialogTitle>
+          </DialogHeader>
+
+          {selected && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Requestor</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{selected.users?.name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{selected.users?.student_id ?? ""}</p>
+                  </div>
+                  <StatusBadge status={selected.status} />
+                </div>
+                <p className="text-xs text-muted-foreground">{selected.users?.email ?? ""}</p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Equipment</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Item</p>
+                    <p className="text-sm font-medium text-foreground">{selected.equipment_units?.equipment_models?.model_name ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Unit ID</p>
+                    <p className="text-sm font-mono font-medium text-foreground">{selected.equipment_units?.unit_id ?? "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Schedule</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Borrow Date</p>
+                    <p className="text-sm font-medium text-foreground">{selected.start_date}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Return Date</p>
+                    <p className="text-sm font-medium text-foreground">{selected.end_date}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selected.purpose && (
+                <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Purpose</p>
+                  <p className="text-sm text-foreground">{selected.purpose}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => selected && handleReject(selected.id)}
+              disabled={mutations.loading}
+            >
+              <IconX className="size-4" /> Reject
+            </Button>
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/80"
+              onClick={() => selected && handleApprove(selected.id)}
+              disabled={mutations.loading}
+            >
+              <IconCheck className="size-4" /> Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
