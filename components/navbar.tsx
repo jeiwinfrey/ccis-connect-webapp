@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth/context";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
+  const isStudent = user?.role === "student";
 
   return (
     <nav className="px-4 pb-2 pt-5 md:px-10 md:pt-6" aria-label="Main navigation">
@@ -44,18 +45,20 @@ export default function Navbar() {
               Virtual Map
             </Link>
           </Button>
-          <Button variant="outline" size="sm" asChild>
+          <Button variant="ghost" size="sm" asChild>
             <Link href="/borrow" className="inline-flex items-center gap-2">
               <IconBook className="h-4 w-4" />
               Borrow
             </Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/reserve" className="inline-flex items-center gap-2">
-              <IconCalendar className="h-4 w-4" />
-              Reserve
-            </Link>
-          </Button>
+          {!isStudent && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/reserve" className="inline-flex items-center gap-2">
+                <IconCalendar className="h-4 w-4" />
+                Reserve
+              </Link>
+            </Button>
+          )}
           {user && (
             <>
               <div className="h-4 w-px bg-border mx-1" />
@@ -117,12 +120,14 @@ export default function Navbar() {
               Borrow
             </Link>
           </Button>
-          <Button asChild className="w-full justify-start gap-2">
-            <Link href="/reserve" onClick={() => setOpen(false)}>
-              <IconCalendar className="h-4 w-4" />
-              Reserve
-            </Link>
-          </Button>
+          {!isStudent && (
+            <Button asChild className="w-full justify-start gap-2">
+              <Link href="/reserve" onClick={() => setOpen(false)}>
+                <IconCalendar className="h-4 w-4" />
+                Reserve
+              </Link>
+            </Button>
+          )}
           {user && (
             <Button
               variant="ghost"

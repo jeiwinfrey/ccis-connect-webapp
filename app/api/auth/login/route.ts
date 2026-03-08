@@ -54,6 +54,15 @@ export async function POST(request: Request) {
       maxAge: MAX_AGE,
     });
 
+    // Set role cookie (non-httpOnly so middleware can read it)
+    cookieStore.set("ccis_role", user.role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: MAX_AGE,
+    });
+
     // Return user data without password_hash
     const { password_hash: _, ...safeUser } = user;
     return NextResponse.json(safeUser);
