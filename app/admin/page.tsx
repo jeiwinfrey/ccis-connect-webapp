@@ -93,6 +93,11 @@ const equipmentSubItems = [
     { key: "equipment-all" as ActiveSection, label: "All Units", icon: IconPackage },
 ];
 
+const managementSubItems = [
+    { key: "room-manage" as ActiveSection, label: "Manage Rooms", icon: IconDoor },
+    { key: "equipment-manage" as ActiveSection, label: "Manage Inventory", icon: IconSettings },
+];
+
 function AdminSidebar({
     active,
     setActive,
@@ -217,37 +222,31 @@ function AdminSidebar({
                                 </SidebarMenuSub>
                             </SidebarMenuItem>
 
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-
-                <SidebarSeparator />
-
-                {/* Management */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Management</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
+                            {/* Management */}
                             <SidebarMenuItem>
                                 <SidebarMenuButton
-                                    isActive={active === "room-manage"}
-                                    onClick={() => setActive("room-manage")}
-                                    tooltip="Manage Rooms"
-                                >
-                                    <IconDoor />
-                                    <span>Manage Rooms</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    isActive={active === "equipment-manage"}
-                                    onClick={() => setActive("equipment-manage")}
-                                    tooltip="Manage Inventory"
+                                    className="pointer-events-none cursor-default"
+                                    tooltip="Management"
                                 >
                                     <IconSettings />
-                                    <span>Manage Inventory</span>
+                                    <span>Management</span>
                                 </SidebarMenuButton>
+                                <SidebarMenuSub>
+                                    {managementSubItems.map((item) => (
+                                        <SidebarMenuSubItem key={item.key}>
+                                            <SidebarMenuSubButton
+                                                isActive={active === item.key}
+                                                onClick={() => setActive(item.key)}
+                                                asChild={false}
+                                            >
+                                                <item.icon className="h-3.5 w-3.5" />
+                                                <span>{item.label}</span>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                    ))}
+                                </SidebarMenuSub>
                             </SidebarMenuItem>
+
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
@@ -358,11 +357,11 @@ export default function AdminPage() {
         "room-pending": ["Room Reservations", "Pending"],
         "room-accepted": ["Room Reservations", "Accepted"],
         "room-rejected": ["Room Reservations", "Rejected"],
-        "room-manage": ["Manage Rooms"],
+        "room-manage": ["Management", "Manage Rooms"],
         "equipment-available": ["Equipment Inventory", "Available"],
         "equipment-on-loan": ["Equipment Inventory", "On Loan"],
         "equipment-all": ["Equipment Inventory", "All Units"],
-        "equipment-manage": ["Manage Inventory"],
+        "equipment-manage": ["Management", "Manage Inventory"],
         history: ["History"],
         analytics: ["Analytics"],
         admin: ["Admin"],
