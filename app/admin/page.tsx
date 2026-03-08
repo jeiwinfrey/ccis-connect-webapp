@@ -85,14 +85,12 @@ const roomSubItems = [
     { key: "room-pending" as ActiveSection, label: "Pending", icon: IconClock },
     { key: "room-accepted" as ActiveSection, label: "Accepted", icon: IconCheck },
     { key: "room-rejected" as ActiveSection, label: "Rejected", icon: IconX },
-    { key: "room-manage" as ActiveSection, label: "Manage Rooms", icon: IconDoor },
 ];
 
 const equipmentSubItems = [
     { key: "equipment-available" as ActiveSection, label: "Available", icon: IconCircleDotted },
     { key: "equipment-on-loan" as ActiveSection, label: "On Loan", icon: IconPackages },
     { key: "equipment-all" as ActiveSection, label: "All Units", icon: IconPackage },
-    { key: "equipment-manage" as ActiveSection, label: "Manage Inventory", icon: IconSettings },
 ];
 
 function AdminSidebar({
@@ -222,6 +220,37 @@ function AdminSidebar({
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
+
+                <SidebarSeparator />
+
+                {/* Management */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>Management</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    isActive={active === "room-manage"}
+                                    onClick={() => setActive("room-manage")}
+                                    tooltip="Manage Rooms"
+                                >
+                                    <IconDoor />
+                                    <span>Manage Rooms</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    isActive={active === "equipment-manage"}
+                                    onClick={() => setActive("equipment-manage")}
+                                    tooltip="Manage Inventory"
+                                >
+                                    <IconSettings />
+                                    <span>Manage Inventory</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarContent>
 
             <div className="border-b border-border" />
@@ -329,11 +358,11 @@ export default function AdminPage() {
         "room-pending": ["Room Reservations", "Pending"],
         "room-accepted": ["Room Reservations", "Accepted"],
         "room-rejected": ["Room Reservations", "Rejected"],
-        "room-manage": ["Room Reservations", "Manage Rooms"],
+        "room-manage": ["Manage Rooms"],
         "equipment-available": ["Equipment Inventory", "Available"],
         "equipment-on-loan": ["Equipment Inventory", "On Loan"],
         "equipment-all": ["Equipment Inventory", "All Units"],
-        "equipment-manage": ["Equipment Inventory", "Manage Inventory"],
+        "equipment-manage": ["Manage Inventory"],
         history: ["History"],
         analytics: ["Analytics"],
         admin: ["Admin"],
