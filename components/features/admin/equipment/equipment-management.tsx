@@ -102,8 +102,11 @@ function CategoriesSection() {
     setDialogOpen(true);
   }
 
+  const categoryFormValid = name.trim() && emoji.trim() && description.trim() && color.trim();
+
   async function handleSave() {
-    const data = { name, emoji, description, color };
+    if (!categoryFormValid) return;
+    const data = { name: name.trim(), emoji: emoji.trim(), description: description.trim(), color: color.trim() };
     try {
       if (editing) {
         await mutations.updateCategory(editing.id, data);
@@ -183,7 +186,12 @@ function CategoriesSection() {
                       <TableCell className="text-lg">{cat.emoji}</TableCell>
                       <TableCell className="font-semibold text-sm">{cat.name}</TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{cat.description}</TableCell>
-                      <TableCell className="text-sm font-mono">{cat.color}</TableCell>
+                      <TableCell className="text-sm font-mono">
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 rounded border border-border shrink-0" style={{ backgroundColor: cat.color }} />
+                          {cat.color}
+                        </div>
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <Button size="sm" variant="ghost" className="h-8 px-2.5 text-xs" onClick={() => openEdit(cat)}>
@@ -211,25 +219,47 @@ function CategoriesSection() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Name</Label>
-              <Input placeholder='e.g. "Cameras"' value={name} onChange={(e) => setName(e.target.value)} />
+              <Label className="text-sm font-semibold">Name <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "Cameras"' value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Emoji</Label>
-              <Input placeholder='e.g. "📷"' value={emoji} onChange={(e) => setEmoji(e.target.value)} />
+              <Label className="text-sm font-semibold">Emoji <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "&#x1F4F7;"' value={emoji} onChange={(e) => setEmoji(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Description</Label>
-              <Input placeholder="Brief description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Label className="text-sm font-semibold">Description <span className="text-destructive">*</span></Label>
+              <Input placeholder="Brief description" value={description} onChange={(e) => setDescription(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Color (CSS class)</Label>
-              <Input placeholder='e.g. "blue"' value={color} onChange={(e) => setColor(e.target.value)} />
+              <Label className="text-sm font-semibold">Color <span className="text-destructive">*</span></Label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={color.startsWith("#") ? color : "#3b82f6"}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="h-9 w-12 rounded-md border border-input cursor-pointer bg-transparent p-0.5"
+                  title="Pick a color"
+                />
+                <Input
+                  placeholder='e.g. "#3b82f6"'
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  required
+                  className="flex-1"
+                />
+                {color && (
+                  <div
+                    className="h-9 w-9 rounded-md border border-input shrink-0"
+                    style={{ backgroundColor: color }}
+                    title={`Preview: ${color}`}
+                  />
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={mutations.loading || !name.trim()}>
+            <Button onClick={handleSave} disabled={mutations.loading || !categoryFormValid}>
               {mutations.loading ? "Saving..." : editing ? "Save Changes" : "Add Category"}
             </Button>
           </DialogFooter>
@@ -257,8 +287,8 @@ function CategoriesSection() {
 
 function ModelsSection() {
   const { categories } = useEquipmentCategories();
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const { models, loading, refetch } = useEquipmentModels(selectedCategory || undefined);
+  const [selectedCategory, setSelectedCategory] = useState<string>("__all__");
+  const { models, loading, refetch } = useEquipmentModels(selectedCategory === "__all__" ? undefined : selectedCategory);
   const mutations = useEquipmentMutations();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -273,7 +303,7 @@ function ModelsSection() {
 
   function openAdd() {
     setEditing(null);
-    setCategoryId(selectedCategory || "");
+    setCategoryId(selectedCategory === "__all__" ? "" : selectedCategory);
     setModelName(""); setDescription(""); setImageUrl("");
     setDialogOpen(true);
   }
@@ -346,7 +376,7 @@ function ModelsSection() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="__all__">All Categories</SelectItem>
                 {categories.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.emoji} {c.name}</SelectItem>
                 ))}
@@ -469,9 +499,9 @@ function ModelsSection() {
 function UnitsSection() {
   const { categories } = useEquipmentCategories();
   const { models } = useEquipmentModels();
-  const [selectedModel, setSelectedModel] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const { units, loading, refetch } = useEquipmentUnits(selectedModel || undefined, statusFilter || undefined);
+  const [selectedModel, setSelectedModel] = useState<string>("__all__");
+  const [statusFilter, setStatusFilter] = useState<string>("__all__");
+  const { units, loading, refetch } = useEquipmentUnits(selectedModel === "__all__" ? undefined : selectedModel, statusFilter === "__all__" ? undefined : statusFilter);
   const mutations = useEquipmentMutations();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -487,7 +517,7 @@ function UnitsSection() {
 
   function openAdd() {
     setEditing(null);
-    setModelId(selectedModel || "");
+    setModelId(selectedModel === "__all__" ? "" : selectedModel);
     setUnitId(""); setCondition("Good"); setStatus("available"); setNotes("");
     setDialogOpen(true);
   }
@@ -561,7 +591,7 @@ function UnitsSection() {
                 <SelectValue placeholder="All Models" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Models</SelectItem>
+                <SelectItem value="__all__">All Models</SelectItem>
                 {models.map((m) => (
                   <SelectItem key={m.id} value={m.id}>{m.model_name}</SelectItem>
                 ))}
@@ -572,7 +602,7 @@ function UnitsSection() {
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="__all__">All Statuses</SelectItem>
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="on-loan">On Loan</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
