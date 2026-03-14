@@ -41,7 +41,7 @@ export async function PUT(
       detail: `Room "${body.name ?? id}" was updated`,
     });
 
-    return NextResponse.json(data);
+    return NextResponse.json({ data });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },
