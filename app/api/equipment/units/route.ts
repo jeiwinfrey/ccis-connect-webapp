@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import type { EquipmentUnit, EquipmentUnitInsert } from "@/lib/supabase/types";
 
@@ -11,7 +11,7 @@ async function getSessionUserId(): Promise<string | null> {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const modelId = request.nextUrl.searchParams.get("model_id");
     const status = request.nextUrl.searchParams.get("status");
     const include = request.nextUrl.searchParams.get("include");
