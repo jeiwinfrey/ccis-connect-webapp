@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import type { RoomInsert } from "@/lib/supabase/types";
 
@@ -12,7 +12,7 @@ async function getSessionUserId(): Promise<string | null> {
 // GET /api/rooms — list all rooms
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
 
     const { data, error } = await supabase
       .from("rooms")
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       detail: `Room "${body.name}" (${body.room_number}) was created`,
     });
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json({ data }, { status: 201 });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },
