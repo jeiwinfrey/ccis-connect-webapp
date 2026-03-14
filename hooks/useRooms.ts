@@ -144,7 +144,7 @@ export function useRoomMutations() {
       const res = await window.fetch(`/api/rooms/${roomId}/availability`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slots }),
+        body: JSON.stringify({ availability: slots }),
       });
       if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Failed"); }
       return (await res.json()).data as RoomAvailability[];
