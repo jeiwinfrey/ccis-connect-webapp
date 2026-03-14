@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { RoomReservation, RoomReservationInsert } from "@/lib/supabase/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const status = request.nextUrl.searchParams.get("status");
     const userId = request.nextUrl.searchParams.get("user_id");
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const body: RoomReservationInsert = await request.json();
 
     if (

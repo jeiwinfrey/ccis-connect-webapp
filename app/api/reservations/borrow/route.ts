@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { BorrowRequest, BorrowRequestInsert } from "@/lib/supabase/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const status = request.nextUrl.searchParams.get("status");
     const userId = request.nextUrl.searchParams.get("user_id");
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const body: BorrowRequestInsert = await request.json();
 
     if (!body.user_id || !body.unit_id || !body.start_date || !body.end_date) {
