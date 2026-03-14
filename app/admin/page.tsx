@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
     IconLayoutDashboard,
@@ -39,6 +39,7 @@ import {
     SidebarInset,
     SidebarTrigger,
     SidebarSeparator,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -110,9 +111,26 @@ function AdminSidebar({
     const isBorrowActive = active.startsWith("borrow");
     const isRoomActive = active.startsWith("room");
     const isEquipActive = active.startsWith("equipment");
+    const { state, setOpen } = useSidebar();
+    const hoverOpenedRef = useRef(false);
 
     return (
-        <Sidebar collapsible="icon" aria-label="Admin sidebar">
+        <Sidebar
+            collapsible="icon"
+            aria-label="Admin sidebar"
+            onMouseEnter={() => {
+                if (state === "collapsed") {
+                    hoverOpenedRef.current = true;
+                    setOpen(true);
+                }
+            }}
+            onMouseLeave={() => {
+                if (hoverOpenedRef.current) {
+                    hoverOpenedRef.current = false;
+                    setOpen(false);
+                }
+            }}
+        >
             {/* Header: Logo + Brand */}
             <SidebarHeader className="py-4 px-3">
                 <div className="flex items-center gap-2 px-1">
