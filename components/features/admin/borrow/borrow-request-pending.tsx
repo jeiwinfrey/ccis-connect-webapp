@@ -6,8 +6,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { IconCheck, IconX, IconFileText, IconLoader2 } from "@tabler/icons-react";
@@ -21,6 +22,8 @@ export default function BorrowRequestPending() {
   const mutations = useBorrowMutations();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<BorrowRequestWithDetails | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<BorrowRequestWithDetails | null>(null);
+  const [rejectNotes, setRejectNotes] = useState("");
 
   const filtered = requests.filter(row => {
     const userName = row.users?.name ?? "";
@@ -42,10 +45,15 @@ export default function BorrowRequestPending() {
     }
   }
 
-  async function handleReject(id: string) {
+  async function handleRejectConfirm() {
+    if (!rejectTarget) return;
     try {
-      await mutations.updateBorrowRequest(id, { status: "rejected" });
-      setSelected(null);
+      await mutations.updateBorrowRequest(rejectTarget.id, {
+        status: "rejected",
+        admin_notes: rejectNotes.trim() || undefined,
+      });
+      setRejectTarget(null);
+      setRejectNotes("");
       refetch();
       toast.success("Borrow request rejected");
     } catch (e) {
@@ -131,7 +139,7 @@ export default function BorrowRequestPending() {
                               size="sm"
                               variant="ghost"
                               className="h-8 px-2.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleReject(row.id)}
+                              onClick={() => setRejectTarget(row)}
                               disabled={mutations.loading}
                             >
                               <IconX className="size-3.5" />
@@ -220,7 +228,7 @@ export default function BorrowRequestPending() {
             <Button
               variant="ghost"
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => selected && handleReject(selected.id)}
+              onClick={() => { setRejectTarget(selected!); setSelected(null); }}
               disabled={mutations.loading}
             >
               <IconX className="size-4" /> Reject
@@ -231,6 +239,48 @@ export default function BorrowRequestPending() {
               disabled={mutations.loading}
             >
               <IconCheck className="size-4" /> Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rejection Reason Modal */}
+      <Dialog
+        open={!!rejectTarget}
+        onOpenChange={open => { if (!open) { setRejectTarget(null); setRejectNotes(""); } }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Borrow Request</DialogTitle>
+            <DialogDescription>
+              Rejecting request from <span className="font-semibold">{rejectTarget?.users?.name ?? "—"}</span> for{" "}
+              <span className="font-semibold">{rejectTarget?.equipment_units?.equipment_models?.model_name ?? "—"}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Provide a reason for this rejection (optional)..."
+              rows={4}
+              className="resize-none"
+              value={rejectNotes}
+              onChange={e => setRejectNotes(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => { setRejectTarget(null); setRejectNotes(""); }}
+              disabled={mutations.loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRejectConfirm}
+              disabled={mutations.loading}
+            >
+              {mutations.loading ? <IconLoader2 className="size-4 animate-spin mr-1" /> : null}
+              Confirm Rejection
             </Button>
           </DialogFooter>
         </DialogContent>
