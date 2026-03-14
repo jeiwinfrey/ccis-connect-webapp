@@ -12,8 +12,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import {
   IconPlus, IconPencil, IconTrash, IconDoor, IconCalendar, IconLoader2,
 } from "@tabler/icons-react";
@@ -249,36 +250,107 @@ export default function RoomManagement() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Room" : "Add Room"}</DialogTitle>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 shrink-0">
+                <IconDoor className="size-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base leading-tight">
+                  {editing ? "Edit Room" : "Add Room"}
+                </DialogTitle>
+                <DialogDescription className="text-xs mt-0.5">
+                  {editing
+                    ? "Update the details for this room."
+                    : "Fill in the details to create a new room."}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Room Number <span className="text-destructive">*</span></Label>
-              <Input placeholder='e.g. "R101"' value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Name <span className="text-destructive">*</span></Label>
-              <Input placeholder='e.g. "Seminar Room B"' value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Type <span className="text-destructive">*</span></Label>
-              <Input placeholder='e.g. "Seminar Room", "Computer Lab"' value={type} onChange={(e) => setType(e.target.value)} required />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+
+          <div className="space-y-3 pt-1">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Capacity <span className="text-destructive">*</span></Label>
-                <Input placeholder='e.g. "30 pax"' value={capacity} onChange={(e) => setCapacity(e.target.value)} required />
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Room No. <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  placeholder="e.g. R101"
+                  value={roomNumber}
+                  onChange={(e) => setRoomNumber(e.target.value)}
+                />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Floor <span className="text-destructive">*</span></Label>
-                <Input placeholder='e.g. "1st Floor"' value={floor} onChange={(e) => setFloor(e.target.value)} required />
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Floor <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  placeholder="e.g. 3rd Floor"
+                  value={floor}
+                  onChange={(e) => setFloor(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="e.g. Seminar Room B"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Type <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  placeholder="e.g. Computer Lab"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Capacity <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  placeholder="e.g. 30 pax"
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value)}
+                />
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={mutations.loading || !roomNumber.trim() || !name.trim() || !type.trim() || !capacity.trim() || !floor.trim()}>
-              {mutations.loading ? "Saving..." : editing ? "Save Changes" : "Add Room"}
+
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={
+                mutations.loading ||
+                !roomNumber.trim() ||
+                !name.trim() ||
+                !type.trim() ||
+                !capacity.trim() ||
+                !floor.trim()
+              }
+            >
+              {mutations.loading ? (
+                <>
+                  <IconLoader2 className="size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : editing ? (
+                "Save Changes"
+              ) : (
+                "Add Room"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -286,20 +358,44 @@ export default function RoomManagement() {
 
       {/* Availability Schedule Dialog */}
       <Dialog open={!!scheduleRoom} onOpenChange={(open) => !open && setScheduleRoom(null)}>
-        <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Availability Schedule — {scheduleRoom?.name} ({scheduleRoom?.room_number})
-            </DialogTitle>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 shrink-0">
+                <IconCalendar className="size-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle className="text-base leading-tight">Weekly Availability</DialogTitle>
+                <DialogDescription className="text-xs mt-0.5">
+                  {scheduleRoom?.name}
+                  {scheduleRoom?.room_number && (
+                    <span className="text-muted-foreground/60 mx-1">·</span>
+                  )}
+                  {scheduleRoom?.room_number}
+                  {scheduleRoom?.type && (
+                    <span className="text-muted-foreground/60 mx-1">·</span>
+                  )}
+                  {scheduleRoom?.type}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Click on time slots to toggle availability. Filled slots indicate when the room is available for booking.
-          </p>
+
           <AvailabilityCalendar selectedSlots={slots} onSlotsChange={setSlots} />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setScheduleRoom(null)}>Cancel</Button>
+
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setScheduleRoom(null)}>
+              Cancel
+            </Button>
             <Button onClick={handleSaveSchedule} disabled={mutations.loading}>
-              {mutations.loading ? "Saving..." : "Save Schedule"}
+              {mutations.loading ? (
+                <>
+                  <IconLoader2 className="size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save Schedule"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
