@@ -4,11 +4,13 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { IconPackages, IconLoader2 } from "@tabler/icons-react";
+import { IconPackages, IconLoader2, IconRotateClockwise } from "@tabler/icons-react";
+import { toast } from "sonner";
 import { useEquipmentUnitsWithModel } from "@/hooks/useEquipment";
-import { useBorrowRequests } from "@/hooks/useBorrowRequests";
+import { useBorrowRequests, useBorrowMutations } from "@/hooks/useBorrowRequests";
 
 const conditionBadge: Record<string, string> = {
   Excellent: "text-emerald-600 border-emerald-300 bg-emerald-50",
@@ -19,7 +21,8 @@ const conditionBadge: Record<string, string> = {
 
 export default function EquipmentOnLoan() {
   const { units, loading } = useEquipmentUnitsWithModel("on-loan");
-  const { requests: acceptedBorrows } = useBorrowRequests("accepted");
+  const { requests: acceptedBorrows, refetch } = useBorrowRequests("accepted");
+  const mutations = useBorrowMutations();
   const [search, setSearch] = useState("");
 
   // Build a map from unit_id (uuid) -> borrow request details for accepted borrows
@@ -34,6 +37,17 @@ export default function EquipmentOnLoan() {
     return [modelName, row.unit_id, borrowerName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
+
+  async function handleMarkReturned(borrowId: string) {
+    try {
+      await mutations.updateBorrowRequest(borrowId, { status: "returned" });
+      refetch();
+      toast.success("Marked as returned");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to mark as returned");
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8">
@@ -74,12 +88,13 @@ export default function EquipmentOnLoan() {
                     <TableHead>Due Back</TableHead>
                     <TableHead>Condition</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground text-sm">
+                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground text-sm">
                         No equipment on loan found.
                       </TableCell>
                     </TableRow>
@@ -104,6 +119,18 @@ export default function EquipmentOnLoan() {
                           <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 text-xs">
                             On Loan
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => borrow?.id && handleMarkReturned(borrow.id)}
+                            disabled={!borrow?.id || mutations.loading}
+                          >
+                            <IconRotateClockwise className="size-3.5" />
+                            Mark Returned
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
