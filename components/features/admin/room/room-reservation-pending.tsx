@@ -6,9 +6,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 import { IconCheck, IconX, IconFileText, IconLoader2 } from "@tabler/icons-react";
@@ -25,6 +26,8 @@ export default function RoomReservationPending() {
   const [search, setSearch] = useState("");
   const [room, setRoom] = useState("all");
   const [selected, setSelected] = useState<RoomReservationWithDetails | null>(null);
+  const [declineTarget, setDeclineTarget] = useState<RoomReservationWithDetails | null>(null);
+  const [declineNotes, setDeclineNotes] = useState("");
 
   const filtered = reservations.filter(row => {
     const userName = row.users?.name ?? "";
@@ -48,10 +51,15 @@ export default function RoomReservationPending() {
     }
   }
 
-  async function handleDecline(id: string) {
+  async function handleDeclineConfirm() {
+    if (!declineTarget) return;
     try {
-      await mutations.updateRoomReservation(id, { status: "rejected" });
-      setSelected(null);
+      await mutations.updateRoomReservation(declineTarget.id, {
+        status: "rejected",
+        admin_notes: declineNotes.trim() || undefined,
+      });
+      setDeclineTarget(null);
+      setDeclineNotes("");
       refetch();
       toast.success("Reservation declined");
     } catch (e) {
@@ -165,7 +173,7 @@ export default function RoomReservationPending() {
                               size="sm"
                               variant="ghost"
                               className="h-8 px-2.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDecline(row.id)}
+                              onClick={() => setDeclineTarget(row)}
                               disabled={mutations.loading}
                             >
                               <IconX className="size-3.5" />
@@ -256,7 +264,7 @@ export default function RoomReservationPending() {
             <Button
               variant="ghost"
               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={() => selected && handleDecline(selected.id)}
+              onClick={() => { setDeclineTarget(selected!); setSelected(null); }}
               disabled={mutations.loading}
             >
               <IconX className="size-4" />
@@ -269,6 +277,48 @@ export default function RoomReservationPending() {
             >
               <IconCheck className="size-4" />
               Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Reason Modal */}
+      <Dialog
+        open={!!declineTarget}
+        onOpenChange={open => { if (!open) { setDeclineTarget(null); setDeclineNotes(""); } }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Decline Room Reservation</DialogTitle>
+            <DialogDescription>
+              Declining reservation from <span className="font-semibold">{declineTarget?.users?.name ?? "—"}</span> for{" "}
+              <span className="font-semibold">{declineTarget?.rooms?.name ?? "—"}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Provide a reason for declining this reservation (optional)..."
+              rows={4}
+              className="resize-none"
+              value={declineNotes}
+              onChange={e => setDeclineNotes(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => { setDeclineTarget(null); setDeclineNotes(""); }}
+              disabled={mutations.loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeclineConfirm}
+              disabled={mutations.loading}
+            >
+              {mutations.loading ? <IconLoader2 className="size-4 animate-spin mr-1" /> : null}
+              Confirm Decline
             </Button>
           </DialogFooter>
         </DialogContent>
