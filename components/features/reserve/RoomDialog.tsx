@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -16,8 +19,10 @@ import {
 import { IconCircleCheck, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useRoomReservationMutations } from "@/hooks/useRoomReservations";
+import { useRoomAvailability } from "@/hooks/useRooms";
 import { useAuth } from "@/lib/auth/context";
 import { type Room } from "./types";
+import type { RoomAvailability } from "@/lib/supabase/types";
 
 interface RoomDialogProps {
   room: Room | null;
@@ -26,22 +31,57 @@ interface RoomDialogProps {
   onReservationComplete?: () => void;
 }
 
+function getAvailableStartHours(availability: RoomAvailability[], date: string): number[] {
+  if (!date) return [];
+  const dayOfWeek = new Date(date).getDay();
+  const hours: number[] = [];
+  for (const slot of availability) {
+    if (slot.day_of_week !== dayOfWeek) continue;
+    for (let h = slot.start_hour; h < slot.end_hour; h++) {
+      hours.push(h);
+    }
+  }
+  return hours.sort((a, b) => a - b);
+}
+
+function getAvailableEndHours(availability: RoomAvailability[], startHour: number | null): number[] {
+  if (startHour == null) return [];
+  const slot = availability.find(s => s.start_hour <= startHour && s.end_hour > startHour);
+  if (!slot) return [];
+  const hours: number[] = [];
+  for (let h = startHour + 1; h <= slot.end_hour; h++) {
+    hours.push(h);
+  }
+  return hours;
+}
+
+function formatHour(hour: number): string {
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const h12 = hour % 12 || 12;
+  return `${h12}:00 ${ampm}`;
+}
+
+function toTimeString(hour: number): string {
+  return `${String(hour).padStart(2, "0")}:00`;
+}
+
 export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomDialogProps) {
   const { user } = useAuth();
   const mutations = useRoomReservationMutations();
+  const { availability } = useRoomAvailability(room?.id ?? null);
   const [step, setStep] = useState<"info" | "form" | "confirmed">("info");
 
   // Form state
   const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [startHour, setStartHour] = useState<number | null>(null);
+  const [endHour, setEndHour] = useState<number | null>(null);
   const [purpose, setPurpose] = useState("");
 
   function resetForm() {
     setStep("info");
     setDate("");
-    setStartTime("");
-    setEndTime("");
+    setStartHour(null);
+    setEndHour(null);
     setPurpose("");
   }
 
@@ -50,17 +90,28 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
     onClose();
   }
 
+  function handleDateChange(newDate: string) {
+    setDate(newDate);
+    setStartHour(null);
+    setEndHour(null);
+  }
+
+  function handleStartHourChange(value: string) {
+    setStartHour(Number(value));
+    setEndHour(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!room || !date || !startTime || !endTime || !user) return;
+    if (!room || !date || startHour == null || endHour == null || !user) return;
 
     try {
       await mutations.createRoomReservation({
         room_id: room.id,
         user_id: user.id,
         reservation_date: date,
-        start_time: startTime,
-        end_time: endTime,
+        start_time: toTimeString(startHour),
+        end_time: toTimeString(endHour),
         purpose: purpose.trim(),
       });
       setStep("confirmed");
@@ -79,6 +130,9 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   if (!room) return null;
 
   const isVacant = room.status === "vacant";
+  const today = new Date().toISOString().split("T")[0];
+  const availableStartHours = getAvailableStartHours(availability, date);
+  const availableEndHours = getAvailableEndHours(availability, startHour);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -119,39 +173,66 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="res-date" className="text-sm font-semibold">Date</Label>
+                <Label htmlFor="res-date" className="text-sm font-semibold">
+                  Date <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="res-date"
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  min={today}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="res-start" className="text-sm font-semibold">Start Time</Label>
-                  <Input
-                    id="res-start"
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                  />
+                  <Label className="text-sm font-semibold">
+                    Start Time <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={startHour != null ? String(startHour) : ""}
+                    onValueChange={handleStartHourChange}
+                    disabled={!date}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableStartHours.length === 0 ? (
+                        <SelectItem value="__none__" disabled>No slots available</SelectItem>
+                      ) : (
+                        availableStartHours.map(h => (
+                          <SelectItem key={h} value={String(h)}>{formatHour(h)}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="res-end" className="text-sm font-semibold">End Time</Label>
-                  <Input
-                    id="res-end"
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    required
-                  />
+                  <Label className="text-sm font-semibold">
+                    End Time <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={endHour != null ? String(endHour) : ""}
+                    onValueChange={(v) => setEndHour(Number(v))}
+                    disabled={startHour == null}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableEndHours.map(h => (
+                        <SelectItem key={h} value={String(h)}>{formatHour(h)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="res-purpose" className="text-sm font-semibold">Purpose</Label>
+                <Label htmlFor="res-purpose" className="text-sm font-semibold">
+                  Purpose <span className="text-destructive">*</span>
+                </Label>
                 <Textarea
                   id="res-purpose"
                   placeholder="Briefly describe the purpose of your reservation..."
@@ -170,7 +251,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={mutations.loading || !date || !startTime || !endTime}
+                disabled={mutations.loading || !date || startHour == null || endHour == null || !purpose.trim()}
               >
                 {mutations.loading ? (
                   <>
