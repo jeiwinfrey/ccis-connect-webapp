@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type { RoomAvailabilityInsert } from "@/lib/supabase/types";
 
 // GET /api/rooms/[id]/availability — get availability schedule for a room
@@ -39,7 +39,7 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const body: {
       availability: Array<{
         day_of_week: number;

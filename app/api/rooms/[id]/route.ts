@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import type { RoomUpdate } from "@/lib/supabase/types";
+
+const SESSION_COOKIE = "ccis_session";
+async function getSessionUserId(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
+}
 
 // PUT /api/rooms/[id] — update a room
 export async function PUT(
@@ -9,7 +16,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const body: RoomUpdate = await request.json();
 
     const { data, error } = await supabase
@@ -27,6 +34,13 @@ export async function PUT(
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
 
+    const adminId = await getSessionUserId();
+    await supabase.from("activity_log").insert({
+      user_id: adminId,
+      action: "room_updated",
+      detail: `Room "${body.name ?? id}" was updated`,
+    });
+
     return NextResponse.json(data);
   } catch {
     return NextResponse.json(
@@ -43,7 +57,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
+    const adminId = await getSessionUserId();
 
     // Check for future reservations with status 'accepted' or 'pending'
     const today = new Date().toISOString().split("T")[0];
@@ -95,6 +110,12 @@ export async function DELETE(
         { status: 500 },
       );
     }
+
+    await supabase.from("activity_log").insert({
+      user_id: adminId,
+      action: "room_deleted",
+      detail: `Room (id: ${id}) was deleted`,
+    });
 
     return NextResponse.json({ message: "Room deleted successfully" });
   } catch {
