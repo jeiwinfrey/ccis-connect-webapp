@@ -58,17 +58,6 @@ export default function User() {
       status: r.status === "accepted" ? ("active" as const) : ("returned" as const),
     }));
 
-  const reservationHistory = allReservations
-    .filter((r) => r.status === "accepted")
-    .map((r) => ({
-      room: r.rooms?.name ?? "Room",
-      date: formatLong(r.reservation_date),
-      time: `${formatTime(r.start_time)} – ${formatTime(r.end_time)}`,
-      status: isUpcoming(r.reservation_date, r.start_time)
-        ? ("confirmed" as const)
-        : ("completed" as const),
-    }));
-
   const loading = authLoading || borrowLoading || resLoading;
 
   return (
@@ -220,41 +209,6 @@ export default function User() {
             </div>
           </div>
 
-          {/* Room Reservations */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Room Reservations</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {reservationHistory.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground text-sm">
-                  No room reservations yet.
-                </div>
-              ) : (
-                <div className="divide-y divide-border -mx-6">
-                  {reservationHistory.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 px-6 py-3">
-                      <div className="rounded-lg p-1.5 text-violet-600 bg-violet-50">
-                        <IconCalendar className="size-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">{item.room}</p>
-                        <p className="text-xs text-muted-foreground">{item.date} &middot; {item.time}</p>
-                      </div>
-                      <Badge variant="outline" className={`text-xs ${
-                        item.status === "confirmed"
-                          ? "text-blue-600 border-blue-300 bg-blue-50"
-                          : "text-emerald-600 border-emerald-300 bg-emerald-50"
-                      }`}>
-                        {item.status === "confirmed" ? <IconClock className="size-3 mr-0.5" /> : <IconCheck className="size-3 mr-0.5" />}
-                        {item.status === "confirmed" ? "Confirmed" : "Completed"}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </>
       )}
     </div>
@@ -281,24 +235,3 @@ function formatShort(dateStr: string): string {
   });
 }
 
-function formatLong(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(time: string): string {
-  const [h, m] = time.split(":").map(Number);
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;
-}
-
-function isUpcoming(dateStr: string, startTime: string): boolean {
-  const d = new Date(dateStr);
-  const [h, m] = startTime.split(":").map(Number);
-  d.setHours(h, m, 0, 0);
-  return d.getTime() > Date.now();
-}
