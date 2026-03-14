@@ -446,7 +446,7 @@ function ModelsSection() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Category</Label>
+              <Label className="text-sm font-semibold">Category <span className="text-destructive">*</span></Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -459,18 +459,18 @@ function ModelsSection() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Model Name</Label>
-              <Input placeholder='e.g. "Sony A7 IV"' value={modelName} onChange={(e) => setModelName(e.target.value)} />
+              <Label className="text-sm font-semibold">Model Name <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "Sony A7 IV"' value={modelName} onChange={(e) => setModelName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Description</Label>
-              <Input placeholder="Brief description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Label className="text-sm font-semibold">Description <span className="text-destructive">*</span></Label>
+              <Input placeholder="Brief description" value={description} onChange={(e) => setDescription(e.target.value)} required />
             </div>
             <ImageUpload value={imageUrl} onChange={setImageUrl} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={mutations.loading || !modelName.trim() || !categoryId}>
+            <Button onClick={handleSave} disabled={mutations.loading || !modelName.trim() || !categoryId || !description.trim()}>
               {mutations.loading ? "Saving..." : editing ? "Save Changes" : "Add Model"}
             </Button>
           </DialogFooter>
@@ -669,7 +669,7 @@ function UnitsSection() {
           <div className="space-y-4">
             {!editing && (
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Model</Label>
+                <Label className="text-sm font-semibold">Model <span className="text-destructive">*</span></Label>
                 <Select value={modelId} onValueChange={setModelId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select model" />
@@ -683,11 +683,11 @@ function UnitsSection() {
               </div>
             )}
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Unit ID</Label>
-              <Input placeholder='e.g. "CAM-A7IV-01"' value={unitId} onChange={(e) => setUnitId(e.target.value)} />
+              <Label className="text-sm font-semibold">Unit ID <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "CAM-A7IV-01"' value={unitId} onChange={(e) => setUnitId(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Condition</Label>
+              <Label className="text-sm font-semibold">Condition <span className="text-destructive">*</span></Label>
               <Select value={condition} onValueChange={setCondition}>
                 <SelectTrigger>
                   <SelectValue />
@@ -701,7 +701,7 @@ function UnitsSection() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Status</Label>
+              <Label className="text-sm font-semibold">Status <span className="text-destructive">*</span></Label>
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger>
                   <SelectValue />

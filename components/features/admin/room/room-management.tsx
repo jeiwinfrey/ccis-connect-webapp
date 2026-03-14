@@ -253,31 +253,31 @@ export default function RoomManagement() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Room Number</Label>
-              <Input placeholder='e.g. "R101"' value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} />
+              <Label className="text-sm font-semibold">Room Number <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "R101"' value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Name</Label>
-              <Input placeholder='e.g. "Seminar Room B"' value={name} onChange={(e) => setName(e.target.value)} />
+              <Label className="text-sm font-semibold">Name <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "Seminar Room B"' value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Type</Label>
-              <Input placeholder='e.g. "Seminar Room", "Computer Lab"' value={type} onChange={(e) => setType(e.target.value)} />
+              <Label className="text-sm font-semibold">Type <span className="text-destructive">*</span></Label>
+              <Input placeholder='e.g. "Seminar Room", "Computer Lab"' value={type} onChange={(e) => setType(e.target.value)} required />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Capacity</Label>
-                <Input placeholder='e.g. "30 pax"' value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+                <Label className="text-sm font-semibold">Capacity <span className="text-destructive">*</span></Label>
+                <Input placeholder='e.g. "30 pax"' value={capacity} onChange={(e) => setCapacity(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Floor</Label>
-                <Input placeholder='e.g. "1st Floor"' value={floor} onChange={(e) => setFloor(e.target.value)} />
+                <Label className="text-sm font-semibold">Floor <span className="text-destructive">*</span></Label>
+                <Input placeholder='e.g. "1st Floor"' value={floor} onChange={(e) => setFloor(e.target.value)} required />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={mutations.loading || !roomNumber.trim() || !name.trim()}>
+            <Button onClick={handleSave} disabled={mutations.loading || !roomNumber.trim() || !name.trim() || !type.trim() || !capacity.trim() || !floor.trim()}>
               {mutations.loading ? "Saving..." : editing ? "Save Changes" : "Add Room"}
             </Button>
           </DialogFooter>
