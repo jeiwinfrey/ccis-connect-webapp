@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { User, UserInsert } from "@/lib/supabase/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const role = request.nextUrl.searchParams.get("role");
 
     let query = supabase.from("users").select("*");
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = await createAdminClient();
     const body: UserInsert = await request.json();
 
     if (!body.name || !body.email || !body.role || !body.department) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json({ data }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },
