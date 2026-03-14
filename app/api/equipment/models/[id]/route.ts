@@ -42,7 +42,7 @@ export async function PUT(
       detail: `Equipment model "${body.model_name ?? id}" was updated`,
     });
 
-    return NextResponse.json(data, { status: 200 });
+    return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },
