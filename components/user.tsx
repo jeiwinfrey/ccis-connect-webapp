@@ -58,7 +58,26 @@ export default function User() {
       status: r.status === "accepted" ? ("active" as const) : ("returned" as const),
     }));
 
+  const roomHistory = allReservations
+    .filter((r) => r.status === "accepted")
+    .map((r) => ({
+      room: r.rooms?.name ?? "Room",
+      roomNumber: r.rooms?.roomNumber ?? "",
+      date: formatShort(r.reservationDate),
+      time: `${formatTime(r.startTime)} - ${formatTime(r.endTime)}`,
+      status: "confirmed" as const,
+    }));
+
   const loading = authLoading || borrowLoading || resLoading;
+
+  function formatTime(time: string): string {
+    const [h, m] = time.split(":");
+    const hour = parseInt(h);
+    const minute = parseInt(m);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const h12 = hour % 12 || 12;
+    return minute === 0 ? `${h12}:00 ${ampm}` : `${h12}:${minute.toString().padStart(2, "0")} ${ampm}`;
+  }
 
   return (
     <div className="px-4 py-4 md:px-10 md:py-6 space-y-6">
@@ -208,6 +227,34 @@ export default function User() {
               </Card>
             </div>
           </div>
+
+          {/* Room Reservation History */}
+          {roomHistory.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold">Room Reservation History</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="divide-y divide-border -mx-6">
+                  {roomHistory.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 px-6 py-3">
+                      <div className="rounded-lg p-1.5 text-violet-600 bg-violet-50">
+                        <IconCalendar className="size-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{item.room}</p>
+                        <p className="text-xs text-muted-foreground">{item.roomNumber} &middot; {item.date} &middot; {item.time}</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300 bg-emerald-50">
+                        <IconCheck className="size-3 mr-0.5" />
+                        Confirmed
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         </>
       )}
