@@ -50,8 +50,8 @@ export function BorrowFormDialog({
   // Get today's date in YYYY-MM-DD format for min date validation
   const today = new Date().toISOString().split('T')[0];
 
-  // Validate dates
-  const isValidDates = borrowDate && returnDate && borrowDate >= today && returnDate >= borrowDate;
+  // Validate dates - allow same day borrowing and return
+  const isValidDates = borrowDate && returnDate && returnDate >= borrowDate;
 
   function resetForm() {
     setBorrowDate("");
