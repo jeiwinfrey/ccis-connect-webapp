@@ -1,74 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { EquipmentModelInsert } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, equipmentModels, activityLog } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { modelSchema } from "@/lib/validations/equipment";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
     const categoryId = request.nextUrl.searchParams.get("category_id");
 
-    let query = supabase.from("equipment_models").select("*");
-
+    let data;
     if (categoryId) {
-      query = query.eq("category_id", categoryId);
+      data = await db
+        .select()
+        .from(equipmentModels)
+        .where(eq(equipmentModels.categoryId, categoryId));
+    } else {
+      data = await db.select().from(equipmentModels);
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 200 });
+    return successResponse(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    const body: EquipmentModelInsert = await request.json();
+    const body = await request.json();
+    const validatedData = modelSchema.parse(body);
 
-    if (!body.model_name || !body.category_id) {
-      return NextResponse.json(
-        { error: "Model name and category_id are required" },
-        { status: 400 },
-      );
-    }
-
-    const { data, error } = await supabase
-      .from("equipment_models")
-      .insert(body)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const [data] = await db
+      .insert(equipmentModels)
+      .values(validatedData)
+      .returning();
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "model_created",
-      detail: `Equipment model "${body.model_name}" was created`,
+      detail: `Equipment model "${validatedData.modelName}" was created`,
     });
 
-    return NextResponse.json({ data }, { status: 201 });
+    return successResponse(data, 201);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

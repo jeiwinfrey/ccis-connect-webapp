@@ -27,14 +27,14 @@ export default function EquipmentOnLoan() {
 
   // Build a map from unit_id (uuid) -> borrow request details for accepted borrows
   const borrowMap = new Map(
-    acceptedBorrows.map(b => [b.unit_id, b])
+    acceptedBorrows.map(b => [b.unitId, b])
   );
 
   const filtered = units.filter(row => {
-    const modelName = row.equipment_models?.model_name ?? "";
+    const modelName = row.equipmentModels?.modelName ?? "";
     const borrow = borrowMap.get(row.id);
     const borrowerName = borrow?.users?.name ?? "";
-    return [modelName, row.unit_id, borrowerName]
+    return [modelName, row.unitId, borrowerName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
 
@@ -102,14 +102,14 @@ export default function EquipmentOnLoan() {
                     const borrow = borrowMap.get(row.id);
                     return (
                       <TableRow key={row.id}>
-                        <TableCell className="font-semibold text-sm">{row.equipment_models?.model_name ?? "—"}</TableCell>
-                        <TableCell className="text-sm font-mono">{row.unit_id}</TableCell>
+                        <TableCell className="font-semibold text-sm">{row.equipmentModels?.modelName ?? "—"}</TableCell>
+                        <TableCell className="text-sm font-mono">{row.unitId}</TableCell>
                         <TableCell>
                           <div className="font-semibold text-sm">{borrow?.users?.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{borrow?.users?.student_id ?? ""}</div>
+                          <div className="text-xs text-muted-foreground">{borrow?.users?.studentId ?? ""}</div>
                         </TableCell>
-                        <TableCell className="text-sm">{borrow?.start_date ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{borrow?.end_date ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{borrow?.startDate ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{borrow?.endDate ?? "—"}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-xs ${conditionBadge[row.condition] ?? ""}`}>
                             {row.condition}

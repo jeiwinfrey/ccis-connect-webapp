@@ -1,79 +1,73 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { RoomReservation, RoomReservationUpdate } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, roomReservations, activityLog } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { roomReservationUpdateSchema } from "@/lib/validations/room";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const supabase = await createAdminClient();
     const { id } = await params;
-    const body: RoomReservationUpdate = await request.json();
+    const body = await request.json();
+    const validatedData = roomReservationUpdateSchema.parse(body);
 
     // Fetch the existing reservation for logging context
-    const { data: existingData, error: fetchError } = await supabase
-      .from("room_reservations")
-      .select("*, users(name), rooms(name)")
-      .eq("id", id)
-      .single();
+    const existing = await db.query.roomReservations.findFirst({
+      where: eq(roomReservations.id, id),
+      with: {
+        user: true,
+        room: true,
+      },
+    });
 
-    if (fetchError || !existingData) {
-      return NextResponse.json(
-        { error: fetchError?.message ?? "Room reservation not found" },
-        { status: 404 },
-      );
+    if (!existing) {
+      return notFoundResponse("Room reservation");
     }
-
-    const existing = existingData as unknown as RoomReservation & {
-      users?: { name: string };
-      rooms?: { name: string };
-    };
 
     // Update the room reservation
-    const { data, error } = await supabase
-      .from("room_reservations")
-      .update(body)
-      .eq("id", id)
-      .select("*, users(*), rooms(*)")
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    await db
+      .update(roomReservations)
+      .set(validatedData)
+      .where(eq(roomReservations.id, id));
 
     // Log activity for status change actions — record the admin who took the action
-    if (body.status && body.status !== existing.status) {
+    if (validatedData.status && validatedData.status !== existing.status) {
       const actionMap: Record<string, string> = {
         accepted: "room_reservation_approved",
         rejected: "room_reservation_rejected",
       };
 
-      const action = actionMap[body.status];
+      const action = actionMap[validatedData.status];
       if (action) {
         const adminId = await getSessionUserId();
-        const requesterName = (existing as any).users?.name ?? "unknown";
-        const roomName = (existing as any).rooms?.name ?? "unknown room";
-        await supabase.from("activity_log").insert({
-          user_id: adminId,
+        const requesterName = existing.user?.name ?? "unknown";
+        const roomName = existing.room?.name ?? "unknown room";
+        await db.insert(activityLog).values({
+          userId: adminId,
           action,
-          detail: `Room reservation by "${requesterName}" for "${roomName}" was ${body.status}`,
+          detail: `Room reservation by "${requesterName}" for "${roomName}" was ${validatedData.status}`,
         });
       }
     }
 
-    return NextResponse.json({ data }, { status: 200 });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    // Fetch the updated data with relations
+    const data = await db.query.roomReservations.findFirst({
+      where: eq(roomReservations.id, id),
+      with: {
+        user: true,
+        room: true,
+      },
+    });
+
+    return successResponse(data);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

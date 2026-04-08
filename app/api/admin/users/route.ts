@@ -1,61 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import type { User, UserInsert } from "@/lib/supabase/types";
+import { NextRequest } from "next/server";
+import { db, users } from "@/lib/db";
+import { eq, inArray } from "drizzle-orm";
+import { userSchema } from "@/lib/validations/user";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
+import type { User } from "@/lib/db/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
     const role = request.nextUrl.searchParams.get("role");
 
-    let query = supabase.from("users").select("*");
-
+    let result;
     if (role) {
       const roles = role.split(",").map((r) => r.trim()) as User["role"][];
-      query = query.in("role", roles);
+      result = await db
+        .select()
+        .from(users)
+        .where(inArray(users.role, roles));
+    } else {
+      result = await db.select().from(users);
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 200 });
+    return successResponse(result);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    const body: UserInsert = await request.json();
+    const body = await request.json();
+    const validatedData = userSchema.parse(body);
 
-    if (!body.name || !body.email || !body.role || !body.department) {
-      return NextResponse.json(
-        { error: "Name, email, role, and department are required" },
-        { status: 400 },
-      );
-    }
+    const [data] = await db
+      .insert(users)
+      .values(validatedData)
+      .returning();
 
-    const { data, error } = await supabase
-      .from("users")
-      .insert(body)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ data }, { status: 201 });
+    return successResponse(data, 201);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

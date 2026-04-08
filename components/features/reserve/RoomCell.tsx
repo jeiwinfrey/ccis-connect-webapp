@@ -11,7 +11,7 @@ export function RoomCell({ room, onSelect }: RoomCellProps) {
 
   return (
     <div className={`flex flex-col items-center justify-center gap-2 h-32 ${isVacant ? "bg-green-50 dark:bg-green-950/30" : "bg-red-50 dark:bg-red-950/30"}`}>
-      <span className="text-[10px] font-medium text-muted-foreground">{room.room_number}</span>
+      <span className="text-[10px] font-medium text-muted-foreground">{room.roomNumber}</span>
       <span className="text-sm font-medium text-foreground">{room.name}</span>
       <span className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full ${
         isVacant ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"

@@ -1,27 +1,32 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
+import { db, activityLog, users } from "@/lib/db";
+import { desc, eq } from "drizzle-orm";
+import { successResponse, errorResponse } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
     const limitParam = request.nextUrl.searchParams.get("limit");
     const limit = limitParam ? parseInt(limitParam, 10) : 50;
 
-    const { data, error } = await supabase
-      .from("activity_log")
-      .select("*, users(name, email)")
-      .order("created_at", { ascending: false })
+    const data = await db
+      .select({
+        id: activityLog.id,
+        userId: activityLog.userId,
+        action: activityLog.action,
+        detail: activityLog.detail,
+        createdAt: activityLog.createdAt,
+        users: {
+          name: users.name,
+          email: users.email,
+        },
+      })
+      .from(activityLog)
+      .leftJoin(users, eq(activityLog.userId, users.id))
+      .orderBy(desc(activityLog.createdAt))
       .limit(limit);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 200 });
+    return successResponse(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }

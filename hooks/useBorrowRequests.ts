@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRealtimeSubscription } from "./useRealtime";
-import type { BorrowRequest, BorrowRequestWithDetails } from "@/lib/supabase/types";
+import type { BorrowRequest, BorrowRequestWithDetails } from "@/lib/db/types";
 
 // ---------------------------------------------------------------------------
 // List borrow requests
@@ -32,7 +31,6 @@ export function useBorrowRequests(status?: string, userId?: string) {
   }, [status, userId]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("borrow_requests", fetch);
 
   return { requests, loading, error, refetch: fetch };
 }
@@ -45,10 +43,10 @@ export function useBorrowMutations() {
   const [loading, setLoading] = useState(false);
 
   async function createBorrowRequest(data: {
-    user_id: string;
-    unit_id: string;
-    start_date: string;
-    end_date: string;
+    userId: string;
+    unitId: string;
+    startDate: string;
+    endDate: string;
     purpose: string;
   }) {
     setLoading(true);
@@ -63,7 +61,7 @@ export function useBorrowMutations() {
     } finally { setLoading(false); }
   }
 
-  async function updateBorrowRequest(id: string, data: { status?: string; admin_notes?: string }) {
+  async function updateBorrowRequest(id: string, data: { status?: string; adminNotes?: string }) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/reservations/borrow/${id}`, {

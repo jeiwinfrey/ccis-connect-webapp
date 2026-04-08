@@ -16,7 +16,7 @@ export default function RoomReservationRejected() {
   const filtered = reservations.filter(row => {
     const userName = row.users?.name ?? "";
     const roomName = row.rooms?.name ?? "";
-    const notes = row.admin_notes ?? "";
+    const notes = row.adminNotes ?? "";
     return [userName, roomName, notes]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -74,11 +74,11 @@ export default function RoomReservationRejected() {
                         <div className="text-xs text-muted-foreground">{row.users?.department ?? ""}</div>
                       </TableCell>
                       <TableCell className="text-sm">{row.rooms?.name ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{row.reservation_date}</TableCell>
+                      <TableCell className="text-sm">{row.reservationDate}</TableCell>
                       <TableCell className="text-sm whitespace-nowrap">
-                        {formatTime(row.start_time)} – {formatTime(row.end_time)}
+                        {formatTime(row.startTime)} – {formatTime(row.endTime)}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[250px] truncate">{row.admin_notes || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[250px] truncate">{row.adminNotes || "—"}</TableCell>
                       <TableCell><StatusBadge status="rejected" /></TableCell>
                     </TableRow>
                   ))}

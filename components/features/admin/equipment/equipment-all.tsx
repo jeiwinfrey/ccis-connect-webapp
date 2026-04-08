@@ -38,11 +38,11 @@ export default function EquipmentAll() {
   const [status, setStatus] = useState("all");
 
   const filtered = units.filter(row => {
-    const modelName = row.equipment_models?.model_name ?? "";
-    const categoryName = row.equipment_models?.equipment_categories?.name ?? "";
-    const matchSearch = [modelName, row.unit_id, row.notes]
+    const modelName = row.equipmentModels?.modelName ?? "";
+    const categoryName = row.equipmentModels?.equipmentCategories?.name ?? "";
+    const matchSearch = [modelName, row.unitId, row.notes]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
-    const matchCat = category === "all" || row.equipment_models?.equipment_categories?.id === category;
+    const matchCat = category === "all" || row.equipmentModels?.equipmentCategories?.id === category;
     const matchStatus = status === "all" || row.status === status;
     return matchSearch && matchCat && matchStatus;
   });
@@ -154,9 +154,9 @@ export default function EquipmentAll() {
                     </TableRow>
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-semibold text-sm">{row.equipment_models?.model_name ?? "—"}</TableCell>
-                      <TableCell className="text-sm font-mono">{row.unit_id}</TableCell>
-                      <TableCell className="text-sm">{row.equipment_models?.equipment_categories?.name ?? "—"}</TableCell>
+                      <TableCell className="font-semibold text-sm">{row.equipmentModels?.modelName ?? "—"}</TableCell>
+                      <TableCell className="text-sm font-mono">{row.unitId}</TableCell>
+                      <TableCell className="text-sm">{row.equipmentModels?.equipmentCategories?.name ?? "—"}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={`text-xs ${conditionBadge[row.condition] ?? ""}`}>
                           {row.condition}

@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { useRooms, useRoomAvailability, useRoomMutations } from "@/hooks/useRooms";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { AvailabilityCalendar, type TimeSlot } from "@/components/shared/AvailabilityCalendar";
-import type { Room, RoomAvailability } from "@/lib/supabase/types";
+import type { Room, RoomAvailability } from "@/lib/db/types";
 
 export default function RoomManagement() {
   const { rooms, loading, refetch } = useRooms();
@@ -51,9 +51,9 @@ export default function RoomManagement() {
     if (availability.length > 0) {
       setSlots(
         availability.map((a) => ({
-          day_of_week: a.day_of_week,
-          start_hour: a.start_hour,
-          end_hour: a.end_hour,
+          dayOfWeek: a.dayOfWeek,
+          startHour: a.startHour,
+          endHour: a.endHour,
         })),
       );
     } else if (scheduleRoom) {
@@ -69,7 +69,7 @@ export default function RoomManagement() {
 
   function openEdit(room: Room) {
     setEditing(room);
-    setRoomNumber(room.room_number);
+    setRoomNumber(room.roomNumber);
     setName(room.name);
     setType(room.type);
     setCapacity(room.capacity);
@@ -78,7 +78,7 @@ export default function RoomManagement() {
   }
 
   async function handleSave() {
-    const data = { room_number: roomNumber, name, type, capacity, floor };
+    const data = { roomNumber: roomNumber, name, type, capacity, floor };
     try {
       if (editing) {
         await mutations.updateRoom(editing.id, data);
@@ -125,7 +125,7 @@ export default function RoomManagement() {
   const floors = Array.from(new Set(rooms.map((r) => r.floor))).sort();
 
   const filtered = rooms.filter((r) => {
-    const matchSearch = [r.room_number, r.name, r.type]
+    const matchSearch = [r.roomNumber, r.name, r.type]
       .some((v) => v.toLowerCase().includes(search.toLowerCase()));
     const matchFloor = floorFilter === "__all__" || r.floor === floorFilter;
     return matchSearch && matchFloor;
@@ -203,7 +203,7 @@ export default function RoomManagement() {
                       </TableRow>
                     ) : filtered.map((room) => (
                       <TableRow key={room.id}>
-                        <TableCell className="font-mono text-sm font-semibold">{room.room_number}</TableCell>
+                        <TableCell className="font-mono text-sm font-semibold">{room.roomNumber}</TableCell>
                         <TableCell className="font-semibold text-sm">{room.name}</TableCell>
                         <TableCell className="text-sm">{room.type}</TableCell>
                         <TableCell className="text-sm">{room.capacity}</TableCell>
@@ -368,10 +368,10 @@ export default function RoomManagement() {
                 <DialogTitle className="text-base leading-tight">Weekly Availability</DialogTitle>
                 <DialogDescription className="text-xs mt-0.5">
                   {scheduleRoom?.name}
-                  {scheduleRoom?.room_number && (
+                  {scheduleRoom?.roomNumber && (
                     <span className="text-muted-foreground/60 mx-1">·</span>
                   )}
-                  {scheduleRoom?.room_number}
+                  {scheduleRoom?.roomNumber}
                   {scheduleRoom?.type && (
                     <span className="text-muted-foreground/60 mx-1">·</span>
                   )}
@@ -406,7 +406,7 @@ export default function RoomManagement() {
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title="Delete Room"
-        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.room_number})? This cannot be undone. Rooms with future reservations cannot be deleted.`}
+        message={`Are you sure you want to delete "${deleteTarget?.name}" (${deleteTarget?.roomNumber})? This cannot be undone. Rooms with future reservations cannot be deleted.`}
         confirmLabel="Delete"
         variant="danger"
         loading={mutations.loading}

@@ -15,7 +15,7 @@ import { IconCheck, IconX, IconFileText, IconLoader2 } from "@tabler/icons-react
 import { toast } from "sonner";
 import { useBorrowRequests, useBorrowMutations } from "@/hooks/useBorrowRequests";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import type { BorrowRequestWithDetails } from "@/lib/supabase/types";
+import type { BorrowRequestWithDetails } from "@/lib/db/types";
 
 export default function BorrowRequestPending() {
   const { requests, loading, refetch } = useBorrowRequests("pending");
@@ -27,8 +27,8 @@ export default function BorrowRequestPending() {
 
   const filtered = requests.filter(row => {
     const userName = row.users?.name ?? "";
-    const unitId = row.equipment_units?.unit_id ?? "";
-    const modelName = row.equipment_units?.equipment_models?.model_name ?? "";
+    const unitId = row.equipmentUnits?.unitId ?? "";
+    const modelName = row.equipmentUnits?.equipmentModels?.modelName ?? "";
     return [userName, unitId, modelName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -50,7 +50,7 @@ export default function BorrowRequestPending() {
     try {
       await mutations.updateBorrowRequest(rejectTarget.id, {
         status: "rejected",
-        admin_notes: rejectNotes.trim() || undefined,
+        adminNotes: rejectNotes.trim() || undefined,
       });
       setRejectTarget(null);
       setRejectNotes("");
@@ -115,13 +115,13 @@ export default function BorrowRequestPending() {
                       <TableRow key={row.id}>
                         <TableCell>
                           <div className="font-semibold text-sm">{row.users?.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{row.users?.student_id ?? row.users?.email ?? ""}</div>
+                          <div className="text-xs text-muted-foreground">{row.users?.studentId ?? row.users?.email ?? ""}</div>
                         </TableCell>
-                        <TableCell className="text-sm">{row.equipment_units?.equipment_models?.model_name ?? "—"}</TableCell>
-                        <TableCell className="text-sm font-mono">{row.equipment_units?.unit_id ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{row.start_date}</TableCell>
-                        <TableCell className="text-sm">{row.end_date}</TableCell>
-                        <TableCell className="text-sm">{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-sm">{row.equipmentUnits?.equipmentModels?.modelName ?? "—"}</TableCell>
+                        <TableCell className="text-sm font-mono">{row.equipmentUnits?.unitId ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{row.startDate}</TableCell>
+                        <TableCell className="text-sm">{row.endDate}</TableCell>
+                        <TableCell className="text-sm">{new Date(row.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell><StatusBadge status={row.status} /></TableCell>
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-1">
@@ -180,7 +180,7 @@ export default function BorrowRequestPending() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-foreground">{selected.users?.name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{selected.users?.student_id ?? ""}</p>
+                    <p className="text-xs text-muted-foreground">{selected.users?.studentId ?? ""}</p>
                   </div>
                   <StatusBadge status={selected.status} />
                 </div>
@@ -192,11 +192,11 @@ export default function BorrowRequestPending() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Item</p>
-                    <p className="text-sm font-medium text-foreground">{selected.equipment_units?.equipment_models?.model_name ?? "—"}</p>
+                    <p className="text-sm font-medium text-foreground">{selected.equipmentUnits?.equipmentModels?.modelName ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Unit ID</p>
-                    <p className="text-sm font-mono font-medium text-foreground">{selected.equipment_units?.unit_id ?? "—"}</p>
+                    <p className="text-sm font-mono font-medium text-foreground">{selected.equipmentUnits?.unitId ?? "—"}</p>
                   </div>
                 </div>
               </div>
@@ -206,11 +206,11 @@ export default function BorrowRequestPending() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Borrow Date</p>
-                    <p className="text-sm font-medium text-foreground">{selected.start_date}</p>
+                    <p className="text-sm font-medium text-foreground">{selected.startDate}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Return Date</p>
-                    <p className="text-sm font-medium text-foreground">{selected.end_date}</p>
+                    <p className="text-sm font-medium text-foreground">{selected.endDate}</p>
                   </div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ export default function BorrowRequestPending() {
             <DialogTitle>Reject Borrow Request</DialogTitle>
             <DialogDescription>
               Rejecting request from <span className="font-semibold">{rejectTarget?.users?.name ?? "—"}</span> for{" "}
-              <span className="font-semibold">{rejectTarget?.equipment_units?.equipment_models?.model_name ?? "—"}</span>.
+              <span className="font-semibold">{rejectTarget?.equipmentUnits?.equipmentModels?.modelName ?? "—"}</span>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">

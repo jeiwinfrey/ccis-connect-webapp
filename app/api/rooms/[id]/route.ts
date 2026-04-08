@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { RoomUpdate } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, rooms, roomAvailability, roomReservations, activityLog } from "@/lib/db";
+import { eq, and, gte, inArray } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { roomUpdateSchema } from "@/lib/validations/room";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 // PUT /api/rooms/[id] — update a room
 export async function PUT(
@@ -16,37 +13,32 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
-    const body: RoomUpdate = await request.json();
+    const body = await request.json();
+    const validatedData = roomUpdateSchema.parse(body);
 
-    const { data, error } = await supabase
-      .from("rooms")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const [data] = await db
+      .update(rooms)
+      .set(validatedData)
+      .where(eq(rooms.id, id))
+      .returning();
 
     if (!data) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return notFoundResponse("Room");
     }
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "room_updated",
-      detail: `Room "${body.name ?? id}" was updated`,
+      detail: `Room "${validatedData.name ?? id}" was updated`,
     });
 
-    return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return successResponse(data);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }
 
@@ -57,71 +49,45 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
     const adminId = await getSessionUserId();
 
     // Check for future reservations with status 'accepted' or 'pending'
     const today = new Date().toISOString().split("T")[0];
 
-    const { data: futureReservations, error: reservationError } = await supabase
-      .from("room_reservations")
-      .select("id")
-      .eq("room_id", id)
-      .gte("reservation_date", today)
-      .in("status", ["accepted", "pending"])
+    const futureReservations = await db
+      .select({ id: roomReservations.id })
+      .from(roomReservations)
+      .where(
+        and(
+          eq(roomReservations.roomId, id),
+          gte(roomReservations.reservationDate, today),
+          inArray(roomReservations.status, ["accepted", "pending"])
+        )
+      )
       .limit(1);
 
-    if (reservationError) {
-      return NextResponse.json(
-        { error: reservationError.message },
-        { status: 500 },
-      );
-    }
-
-    if (futureReservations && futureReservations.length > 0) {
-      return NextResponse.json(
-        { error: "Cannot delete room with future reservations" },
-        { status: 409 },
-      );
+    if (futureReservations.length > 0) {
+      return conflictResponse("Cannot delete room with future reservations");
     }
 
     // Delete associated availability records first
-    const { error: availabilityError } = await supabase
-      .from("room_availability")
-      .delete()
-      .eq("room_id", id);
-
-    if (availabilityError) {
-      return NextResponse.json(
-        { error: availabilityError.message },
-        { status: 500 },
-      );
-    }
+    await db
+      .delete(roomAvailability)
+      .where(eq(roomAvailability.roomId, id));
 
     // Delete the room
-    const { error: deleteError } = await supabase
-      .from("rooms")
-      .delete()
-      .eq("id", id);
+    await db
+      .delete(rooms)
+      .where(eq(rooms.id, id));
 
-    if (deleteError) {
-      return NextResponse.json(
-        { error: deleteError.message },
-        { status: 500 },
-      );
-    }
-
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "room_deleted",
       detail: `Room (id: ${id}) was deleted`,
     });
 
-    return NextResponse.json({ message: "Room deleted successfully" });
+    return successResponse({ message: "Room deleted successfully" });
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }

@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import type { UserUpdate } from "@/lib/supabase/types";
+import { NextRequest } from "next/server";
+import { db, users } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { userUpdateSchema } from "@/lib/validations/user";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function PUT(
   request: NextRequest,
@@ -8,32 +11,25 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
-    const body: UserUpdate = await request.json();
+    const body = await request.json();
+    const validatedData = userUpdateSchema.parse(body);
 
-    const { data, error } = await supabase
-      .from("users")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
+    const [data] = await db
+      .update(users)
+      .set(validatedData)
+      .where(eq(users.id, id))
+      .returning();
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json(
-          { error: "User not found" },
-          { status: 404 },
-        );
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) {
+      return notFoundResponse("User");
     }
 
-    return NextResponse.json(data, { status: 200 });
+    return successResponse(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }
 
@@ -43,25 +39,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
 
-    const { error } = await supabase
-      .from("users")
-      .delete()
-      .eq("id", id);
+    await db
+      .delete(users)
+      .where(eq(users.id, id));
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(
-      { message: "User deleted successfully" },
-      { status: 200 },
-    );
+    return successResponse({ message: "User deleted successfully" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }

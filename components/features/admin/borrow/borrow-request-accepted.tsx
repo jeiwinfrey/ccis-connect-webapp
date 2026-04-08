@@ -16,8 +16,8 @@ export default function BorrowRequestAccepted() {
 
   const filtered = requests.filter(row => {
     const userName = row.users?.name ?? "";
-    const unitId = row.equipment_units?.unit_id ?? "";
-    const modelName = row.equipment_units?.equipment_models?.model_name ?? "";
+    const unitId = row.equipmentUnits?.unitId ?? "";
+    const modelName = row.equipmentUnits?.equipmentModels?.modelName ?? "";
     return [userName, unitId, modelName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -63,10 +63,10 @@ export default function BorrowRequestAccepted() {
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="font-semibold text-sm">{row.users?.name ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{row.equipment_units?.equipment_models?.model_name ?? "—"}</TableCell>
-                      <TableCell className="text-sm font-mono">{row.equipment_units?.unit_id ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{row.start_date}</TableCell>
-                      <TableCell className="text-sm">{row.end_date}</TableCell>
+                      <TableCell className="text-sm">{row.equipmentUnits?.equipmentModels?.modelName ?? "—"}</TableCell>
+                      <TableCell className="text-sm font-mono">{row.equipmentUnits?.unitId ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{row.startDate}</TableCell>
+                      <TableCell className="text-sm">{row.endDate}</TableCell>
                       <TableCell><StatusBadge status="accepted" /></TableCell>
                     </TableRow>
                   ))}

@@ -1,82 +1,78 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import type { BorrowRequest, BorrowRequestInsert } from "@/lib/supabase/types";
+import { NextRequest } from "next/server";
+import { db, borrowRequests, equipmentUnits } from "@/lib/db";
+import { eq, and } from "drizzle-orm";
+import { borrowRequestSchema } from "@/lib/validations/borrow";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
+import type { BorrowRequest } from "@/lib/db/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
     const status = request.nextUrl.searchParams.get("status");
     const userId = request.nextUrl.searchParams.get("user_id");
 
-    let query = supabase
-      .from("borrow_requests")
-      .select("*, users(*), equipment_units(*, equipment_models(*))");
-
+    const conditions = [];
     if (status) {
-      query = query.eq("status", status as BorrowRequest["status"]);
+      conditions.push(eq(borrowRequests.status, status as BorrowRequest["status"]));
     }
-
     if (userId) {
-      query = query.eq("user_id", userId);
+      conditions.push(eq(borrowRequests.userId, userId));
     }
 
-    const { data, error } = await query;
+    const data = await db.query.borrowRequests.findMany({
+      where: conditions.length > 0 ? and(...conditions) : undefined,
+      with: {
+        user: true,
+        unit: {
+          with: {
+            model: true,
+          },
+        },
+      },
+    });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 200 });
+    return successResponse(data);
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    const body: BorrowRequestInsert = await request.json();
+    const body = await request.json();
+    const validatedData = borrowRequestSchema.parse(body);
 
-    if (!body.user_id || !body.unit_id || !body.start_date || !body.end_date) {
-      return NextResponse.json(
-        { error: "user_id, unit_id, start_date, and end_date are required" },
-        { status: 400 },
-      );
-    }
-
-    const { data, error } = await supabase
-      .from("borrow_requests")
-      .insert(body)
-      .select("*, users(*), equipment_units(*, equipment_models(*))")
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const [data] = await db
+      .insert(borrowRequests)
+      .values(validatedData)
+      .returning();
 
     // If the request was auto-accepted, set the unit status to 'on-loan'
-    if (body.status === "accepted") {
-      const { error: unitError } = await supabase
-        .from("equipment_units")
-        .update({ status: "on-loan" })
-        .eq("id", body.unit_id);
-
-      if (unitError) {
-        return NextResponse.json(
-          { error: unitError.message },
-          { status: 500 },
-        );
-      }
+    if (validatedData.status === "accepted") {
+      await db
+        .update(equipmentUnits)
+        .set({ status: "on-loan" })
+        .where(eq(equipmentUnits.id, validatedData.unitId));
     }
 
-    return NextResponse.json({ data }, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    // Fetch the complete data with relations
+    const completeData = await db.query.borrowRequests.findFirst({
+      where: eq(borrowRequests.id, data.id),
+      with: {
+        user: true,
+        unit: {
+          with: {
+            model: true,
+          },
+        },
+      },
+    });
+
+    return successResponse(completeData, 201);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

@@ -41,14 +41,14 @@ export default function Dashboard() {
     ...pendingBorrows.map(b => ({
       type: "Borrow" as const,
       requestor: b.users?.name ?? "—",
-      item: b.equipment_units?.equipment_models?.model_name ?? "—",
-      submitted: new Date(b.created_at).toLocaleDateString(),
+      item: b.equipmentUnits?.equipmentModels?.modelName ?? "—",
+      submitted: new Date(b.createdAt).toLocaleDateString(),
     })),
     ...pendingReservations.map(r => ({
       type: "Room" as const,
       requestor: r.users?.name ?? "—",
       item: r.rooms?.name ?? "—",
-      submitted: new Date(r.created_at).toLocaleDateString(),
+      submitted: new Date(r.createdAt).toLocaleDateString(),
     })),
   ].slice(0, 8);
 
@@ -130,7 +130,7 @@ export default function Dashboard() {
                         <p className="text-sm font-medium text-foreground">{item.action}</p>
                         <p className="text-xs text-muted-foreground truncate">{item.detail}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.created_at)}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt.toString())}</p>
                     </div>
                   );
                 })}

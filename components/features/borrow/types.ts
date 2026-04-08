@@ -6,7 +6,7 @@ import type {
   EquipmentUnit,
   EquipmentCategoryWithModels,
   BorrowRequestWithDetails,
-} from "@/lib/supabase/types";
+} from "@/lib/db/types";
 
 // ---------------------------------------------------------------------------
 // Re-export Supabase types used by borrow components
@@ -86,7 +86,7 @@ export function mapCategoriesToUI(
   const borrowedByUnit = new Map<string, BorrowRequestWithDetails>();
   for (const req of borrowRequests) {
     if (req.status === "accepted") {
-      borrowedByUnit.set(req.unit_id, req);
+      borrowedByUnit.set(req.unitId, req);
     }
   }
 
@@ -96,17 +96,17 @@ export function mapCategoriesToUI(
     emoji: cat.emoji,
     description: cat.description,
     color: cat.color,
-    items: (cat.equipment_models ?? []).map((model) => {
-      const units: Unit[] = (model.equipment_units ?? []).map((u) => {
+    items: (cat.equipmentModels ?? []).map((model) => {
+      const units: Unit[] = (model.equipmentUnits ?? []).map((u) => {
         const borrow = borrowedByUnit.get(u.id);
         return {
           id: u.id,
-          unitId: u.unit_id,
+          unitId: u.unitId,
           notes: u.notes || "",
           condition: u.condition,
           status: u.status,
           borrower: borrow ? borrow.users?.name : undefined,
-          dueBack: borrow ? borrow.end_date : undefined,
+          dueBack: borrow ? borrow.endDate : undefined,
         };
       });
 
@@ -115,9 +115,9 @@ export function mapCategoriesToUI(
 
       return {
         id: model.id,
-        model: model.model_name,
+        model: model.modelName,
         description: model.description,
-        image: model.image_url || "/api/placeholder/300/200",
+        image: model.imageUrl || "/api/placeholder/300/200",
         available: availableUnits.length > 0,
         currentlyBorrowed: allOnLoan,
         units,
@@ -147,12 +147,12 @@ function dayDiff(start: string, end: string): number {
 
 export function mapBorrowRequestToUI(req: BorrowRequestWithDetails): BorrowRequestUI {
   const modelName =
-    req.equipment_units?.equipment_models?.model_name ?? "Unknown";
-  const catEmoji = (req.equipment_units?.equipment_models as unknown as { equipment_categories?: { emoji?: string; name?: string } })
-    ?.equipment_categories?.emoji ?? "📦";
-  const catName = (req.equipment_units?.equipment_models as unknown as { equipment_categories?: { name?: string } })
-    ?.equipment_categories?.name ?? "Equipment";
-  const days = dayDiff(req.start_date, req.end_date);
+    req.equipmentUnits?.equipmentModels?.modelName ?? "Unknown";
+  const catEmoji = (req.equipmentUnits?.equipmentModels as any)
+    ?.equipmentCategories?.emoji ?? "📦";
+  const catName = (req.equipmentUnits?.equipmentModels as any)
+    ?.equipmentCategories?.name ?? "Equipment";
+  const days = dayDiff(req.startDate, req.endDate);
 
   return {
     id: req.id,
@@ -160,17 +160,17 @@ export function mapBorrowRequestToUI(req: BorrowRequestWithDetails): BorrowReque
     emoji: catEmoji,
     category: catName,
     loanDuration: `${days}-day loan`,
-    dates: formatDateRange(req.start_date, req.end_date),
-    submittedDate: new Date(req.created_at).toLocaleDateString("en-US", {
+    dates: formatDateRange(req.startDate, req.endDate),
+    submittedDate: new Date(req.createdAt).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
     }),
     rejectedDate: req.status === "rejected"
-      ? new Date(req.updated_at).toLocaleDateString("en-US", {
+      ? new Date(req.updatedAt).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
         })
       : undefined,
-    reason: req.admin_notes ?? undefined,
+    reason: req.adminNotes ?? undefined,
   };
 }

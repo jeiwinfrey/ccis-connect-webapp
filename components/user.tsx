@@ -37,24 +37,24 @@ export default function User() {
   const pendingRequests = [
     ...pendingBorrows.map((r) => ({
       type: "Borrow" as const,
-      item: r.equipment_units?.equipment_models?.model_name ?? "Equipment",
-      dates: formatDateRange(r.start_date, r.end_date),
-      submitted: formatShort(r.created_at),
+      item: r.equipmentUnits?.equipmentModels?.modelName ?? "Equipment",
+      dates: formatDateRange(r.startDate, r.endDate),
+      submitted: formatShort(r.createdAt.toString()),
     })),
     ...pendingReservations.map((r) => ({
       type: "Room" as const,
       item: r.rooms?.name ?? "Room",
-      dates: formatShort(r.reservation_date),
-      submitted: formatShort(r.created_at),
+      dates: formatShort(r.reservationDate),
+      submitted: formatShort(r.createdAt.toString()),
     })),
   ];
 
   const borrowHistory = allBorrows
     .filter((r) => r.status === "accepted" || r.status === "returned")
     .map((r) => ({
-      equipment: r.equipment_units?.equipment_models?.model_name ?? "Equipment",
-      unitId: r.equipment_units?.unit_id ?? "",
-      dates: formatDateRange(r.start_date, r.end_date),
+      equipment: r.equipmentUnits?.equipmentModels?.modelName ?? "Equipment",
+      unitId: r.equipmentUnits?.unitId ?? "",
+      dates: formatDateRange(r.startDate, r.endDate),
       status: r.status === "accepted" ? ("active" as const) : ("returned" as const),
     }));
 
@@ -75,7 +75,7 @@ export default function User() {
                   {user?.name ?? "Loading..."}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {user?.student_id || user?.username || ""} &middot;{" "}
+                  {user?.studentId || user?.username || ""} &middot;{" "}
                   {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">{user?.department}</p>

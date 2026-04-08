@@ -64,7 +64,7 @@ export default function Navbar() {
               <div className="h-4 w-px bg-border mx-1" />
               <span className="text-xs text-muted-foreground">
                 {user.name}
-                {user.student_id ? ` (${user.student_id})` : user.username ? ` (${user.username})` : ""}
+                {user.studentId ? ` (${user.studentId})` : user.username ? ` (${user.username})` : ""}
               </span>
               <Button
                 variant="ghost"
@@ -98,7 +98,7 @@ export default function Navbar() {
             <div className="px-3 py-2 mb-1">
               <p className="text-sm font-medium text-foreground">{user.name}</p>
               <p className="text-xs text-muted-foreground">
-                {user.student_id || user.username} &middot; {user.role}
+                {user.studentId || user.username} &middot; {user.role}
               </p>
             </div>
           )}

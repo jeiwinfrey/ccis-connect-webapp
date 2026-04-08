@@ -4,21 +4,21 @@ import { Fragment, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 const DAYS = [
-  { short: "Sun", label: "Sunday", idx: 0 },
   { short: "Mon", label: "Monday", idx: 1 },
   { short: "Tue", label: "Tuesday", idx: 2 },
   { short: "Wed", label: "Wednesday", idx: 3 },
   { short: "Thu", label: "Thursday", idx: 4 },
   { short: "Fri", label: "Friday", idx: 5 },
-  { short: "Sat", label: "Saturday", idx: 6 },
 ];
 
-const HOURS = Array.from({ length: 15 }, (_, i) => i + 7); // 7 AM – 9 PM
+// Time slots from 7:30 AM to 5:00 PM in 30-minute increments
+// Represented as minutes from midnight (7:30 AM = 450, 5:00 PM = 1020)
+const TIME_SLOTS = Array.from({ length: 19 }, (_, i) => 450 + i * 30); // 7:30 AM – 4:30 PM (19 slots, ending at 5:00 PM)
 
 export interface TimeSlot {
-  day_of_week: number; // 0=Sunday … 6=Saturday
-  start_hour: number;
-  end_hour: number;
+  dayOfWeek: number; // 0=Sunday … 6=Saturday
+  startHour: number;
+  endHour: number;
 }
 
 interface AvailabilityCalendarProps {
@@ -27,52 +27,73 @@ interface AvailabilityCalendarProps {
   readOnly?: boolean;
 }
 
-function isSlotSelected(slots: TimeSlot[], day: number, hour: number): boolean {
-  return slots.some(
-    (s) => s.day_of_week === day && s.start_hour <= hour && s.end_hour > hour,
-  );
+function isSlotSelected(slots: TimeSlot[], day: number, minutes: number): boolean {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  return slots.some((s) => {
+    const slotStart = s.startHour * 60;
+    const slotEnd = s.endHour * 60;
+    const currentTime = hour * 60 + minute;
+    return s.dayOfWeek === day && currentTime >= slotStart && currentTime < slotEnd;
+  });
 }
 
-function buildContiguousSlots(day: number, hours: Set<number>): TimeSlot[] {
-  if (hours.size === 0) return [];
-  const sorted = Array.from(hours).sort((a, b) => a - b);
+function buildContiguousSlots(day: number, minuteSlots: Set<number>): TimeSlot[] {
+  if (minuteSlots.size === 0) return [];
+  const sorted = Array.from(minuteSlots).sort((a, b) => a - b);
   const slots: TimeSlot[] = [];
   let start = sorted[0];
-  let end = sorted[0] + 1;
+  let end = sorted[0] + 30;
   for (let i = 1; i < sorted.length; i++) {
     if (sorted[i] === end) {
-      end++;
+      end += 30;
     } else {
-      slots.push({ day_of_week: day, start_hour: start, end_hour: end });
+      slots.push({ 
+        dayOfWeek: day, 
+        startHour: Math.floor(start / 60) + (start % 60) / 60, 
+        endHour: Math.floor(end / 60) + (end % 60) / 60 
+      });
       start = sorted[i];
-      end = sorted[i] + 1;
+      end = sorted[i] + 30;
     }
   }
-  slots.push({ day_of_week: day, start_hour: start, end_hour: end });
+  slots.push({ 
+    dayOfWeek: day, 
+    startHour: Math.floor(start / 60) + (start % 60) / 60, 
+    endHour: Math.floor(end / 60) + (end % 60) / 60 
+  });
   return slots;
 }
 
 function isDayFullySelected(slots: TimeSlot[], day: number): boolean {
-  return HOURS.every((h) => isSlotSelected(slots, day, h));
+  return TIME_SLOTS.every((m) => isSlotSelected(slots, day, m));
 }
 
 function isDayPartiallySelected(slots: TimeSlot[], day: number): boolean {
-  const some = HOURS.some((h) => isSlotSelected(slots, day, h));
+  const some = TIME_SLOTS.some((m) => isSlotSelected(slots, day, m));
   return some && !isDayFullySelected(slots, day);
 }
 
 function totalSelectedHours(slots: TimeSlot[]): number {
-  return DAYS.reduce(
-    (sum, day) => sum + HOURS.filter((h) => isSlotSelected(slots, day.idx, h)).length,
+  const totalSlots = DAYS.reduce(
+    (sum, day) => sum + TIME_SLOTS.filter((m) => isSlotSelected(slots, day.idx, m)).length,
     0,
   );
+  return totalSlots * 0.5; // Each slot is 30 minutes = 0.5 hours
 }
 
-function formatHour(hour: number): string {
-  if (hour === 0) return "12 AM";
-  if (hour < 12) return `${hour} AM`;
-  if (hour === 12) return "12 PM";
-  return `${hour - 12} PM`;
+function formatTime(minutes: number): string {
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
+  const period = hour < 12 ? "AM" : "PM";
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minute.toString().padStart(2, '0')}${period}`;
+}
+
+function formatTimeRange(minutes: number): string {
+  const startTime = formatTime(minutes);
+  const endTime = formatTime(minutes + 30);
+  return `${startTime}-${endTime}`;
 }
 
 export function AvailabilityCalendar({
@@ -81,19 +102,23 @@ export function AvailabilityCalendar({
   readOnly = false,
 }: AvailabilityCalendarProps) {
   const toggleSlot = useCallback(
-    (day: number, hour: number) => {
+    (day: number, minutes: number) => {
       if (readOnly) return;
-      const isSelected = isSlotSelected(selectedSlots, day, hour);
-      const otherDays = selectedSlots.filter((s) => s.day_of_week !== day);
-      const hours = new Set<number>();
+      const isSelected = isSlotSelected(selectedSlots, day, minutes);
+      const otherDays = selectedSlots.filter((s) => s.dayOfWeek !== day);
+      const minuteSlots = new Set<number>();
       selectedSlots
-        .filter((s) => s.day_of_week === day)
+        .filter((s) => s.dayOfWeek === day)
         .forEach((s) => {
-          for (let h = s.start_hour; h < s.end_hour; h++) hours.add(h);
+          const startMinutes = Math.floor(s.startHour * 60);
+          const endMinutes = Math.floor(s.endHour * 60);
+          for (let m = startMinutes; m < endMinutes; m += 30) {
+            minuteSlots.add(m);
+          }
         });
-      if (isSelected) hours.delete(hour);
-      else hours.add(hour);
-      onSlotsChange([...otherDays, ...buildContiguousSlots(day, hours)]);
+      if (isSelected) minuteSlots.delete(minutes);
+      else minuteSlots.add(minutes);
+      onSlotsChange([...otherDays, ...buildContiguousSlots(day, minuteSlots)]);
     },
     [readOnly, selectedSlots, onSlotsChange],
   );
@@ -101,11 +126,11 @@ export function AvailabilityCalendar({
   const toggleDay = useCallback(
     (day: number) => {
       if (readOnly) return;
-      const otherDays = selectedSlots.filter((s) => s.day_of_week !== day);
+      const otherDays = selectedSlots.filter((s) => s.dayOfWeek !== day);
       if (isDayFullySelected(selectedSlots, day)) {
         onSlotsChange(otherDays);
       } else {
-        onSlotsChange([...otherDays, ...buildContiguousSlots(day, new Set(HOURS))]);
+        onSlotsChange([...otherDays, ...buildContiguousSlots(day, new Set(TIME_SLOTS))]);
       }
     },
     [readOnly, selectedSlots, onSlotsChange],
@@ -144,13 +169,12 @@ export function AvailabilityCalendar({
 
       {/* Calendar grid */}
       <div className="overflow-x-auto rounded-xl border border-border">
-        <div className="inline-grid grid-cols-[52px_repeat(7,minmax(56px,1fr))] min-w-[520px] w-full">
+        <div className="inline-grid grid-cols-[100px_repeat(5,minmax(56px,1fr))] min-w-[420px] w-full">
           {/* Column headers */}
           <div className="bg-muted/50 border-b border-border" />
           {DAYS.map((day) => {
             const full = isDayFullySelected(selectedSlots, day.idx);
             const partial = isDayPartiallySelected(selectedSlots, day.idx);
-            const isWeekend = day.idx === 0 || day.idx === 6;
             return (
               <button
                 key={day.idx}
@@ -164,8 +188,7 @@ export function AvailabilityCalendar({
                   !readOnly && "hover:bg-muted cursor-pointer",
                   readOnly && "cursor-default",
                   full && "bg-primary/15 text-primary",
-                  !full && isWeekend && "text-muted-foreground/60",
-                  !full && !isWeekend && "text-foreground/70",
+                  !full && "text-foreground/70",
                 )}
               >
                 {day.short}
@@ -183,34 +206,34 @@ export function AvailabilityCalendar({
             );
           })}
 
-          {/* Hour rows */}
-          {HOURS.map((hour, rowIdx) => {
-            const isLast = rowIdx === HOURS.length - 1;
+          {/* Time slot rows */}
+          {TIME_SLOTS.map((minutes, rowIdx) => {
+            const isLast = rowIdx === TIME_SLOTS.length - 1;
             return (
-              <Fragment key={hour}>
+              <Fragment key={minutes}>
                 {/* Time label */}
                 <div
                   className={cn(
-                    "px-2 flex items-center justify-end text-[10px] font-medium text-muted-foreground whitespace-nowrap h-9",
+                    "px-2 flex items-center justify-end text-[9px] font-medium text-muted-foreground whitespace-nowrap h-7",
                     !isLast && "border-b border-border",
                   )}
                 >
-                  {formatHour(hour)}
+                  {formatTimeRange(minutes)}
                 </div>
 
                 {/* Day cells */}
                 {DAYS.map((day) => {
-                  const selected = isSlotSelected(selectedSlots, day.idx, hour);
+                  const selected = isSlotSelected(selectedSlots, day.idx, minutes);
                   return (
                     <button
                       key={day.idx}
                       type="button"
                       disabled={readOnly}
-                      onClick={() => toggleSlot(day.idx, hour)}
-                      aria-label={`${day.label} ${formatHour(hour)}`}
+                      onClick={() => toggleSlot(day.idx, minutes)}
+                      aria-label={`${day.label} ${formatTimeRange(minutes)}`}
                       aria-pressed={selected}
                       className={cn(
-                        "border-l h-9 transition-colors",
+                        "border-l h-7 transition-colors",
                         !isLast && "border-b border-border",
                         selected
                           ? "bg-primary/70 hover:bg-primary/85"

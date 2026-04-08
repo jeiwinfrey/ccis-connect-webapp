@@ -65,10 +65,10 @@ export function BorrowFormDialog({
 
     try {
       await mutations.createBorrowRequest({
-        user_id: user.id,
-        unit_id: unit!.id,
-        start_date: borrowDate,
-        end_date: returnDate,
+        userId: user.id,
+        unitId: unit!.id,
+        startDate: borrowDate,
+        endDate: returnDate,
         purpose: purpose.trim(),
       });
       setSubmitted(true);
@@ -123,7 +123,7 @@ export function BorrowFormDialog({
             <div className="rounded-lg bg-muted/50 p-3 text-sm">
               <p className="font-medium text-foreground">{user.name}</p>
               <p className="text-xs text-muted-foreground">
-                {user.student_id || user.username} &middot; {user.department}
+                {user.studentId || user.username} &middot; {user.department}
               </p>
             </div>
           )}

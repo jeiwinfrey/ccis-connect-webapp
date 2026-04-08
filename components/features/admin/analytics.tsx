@@ -90,12 +90,12 @@ export default function Analytics() {
       const month = d.getMonth();
 
       const bCount = borrows.filter((b) => {
-        const cd = new Date(b.created_at);
+        const cd = new Date(b.createdAt);
         return cd.getFullYear() === year && cd.getMonth() === month;
       }).length;
 
       const rCount = reservations.filter((r) => {
-        const cd = new Date(r.created_at);
+        const cd = new Date(r.createdAt);
         return cd.getFullYear() === year && cd.getMonth() === month;
       }).length;
 
@@ -122,7 +122,7 @@ export default function Analytics() {
   const equipmentData = useMemo(() => {
     const catCounts: Record<string, { category: string; available: number; "on-loan": number; maintenance: number }> = {};
     units.forEach((u) => {
-      const cat = u.equipment_models?.equipment_categories?.name ?? "Other";
+      const cat = u.equipmentModels?.equipmentCategories?.name ?? "Other";
       if (!catCounts[cat]) catCounts[cat] = { category: cat, available: 0, "on-loan": 0, maintenance: 0 };
       if (u.status === "available") catCounts[cat].available++;
       else if (u.status === "on-loan") catCounts[cat]["on-loan"]++;

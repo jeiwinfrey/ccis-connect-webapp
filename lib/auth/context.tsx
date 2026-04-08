@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import type { SafeUser } from "@/lib/supabase/types";
+import type { SafeUser } from "@/lib/db/types";
 
 interface AuthContextValue {
   user: SafeUser | null;

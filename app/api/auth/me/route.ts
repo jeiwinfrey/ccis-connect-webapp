@@ -1,50 +1,36 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { User } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
+import { db, users } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { getSessionUserId, clearSession } from "@/lib/auth/session";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get(SESSION_COOKIE);
+    const userId = await getSessionUserId();
 
-    if (!sessionCookie?.value) {
+    if (!userId) {
       return NextResponse.json(
         { error: "Not authenticated" },
         { status: 401 },
       );
     }
 
-    const userId = sessionCookie.value;
-    const supabase = await createAdminClient();
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (error || !data) {
+    if (!user) {
       // Invalid session — clear cookie
-      cookieStore.set(SESSION_COOKIE, "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 0,
-      });
+      await clearSession();
       return NextResponse.json(
         { error: "Session expired" },
         { status: 401 },
       );
     }
 
-    const user = data as unknown as User;
-
-    // Return user data without password_hash
-    const { password_hash: _, ...safeUser } = user;
+    // Return user data without passwordHash
+    const { passwordHash: _, ...safeUser } = user;
     return NextResponse.json(safeUser);
   } catch {
     return NextResponse.json(

@@ -144,7 +144,7 @@ export default function History() {
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="text-sm whitespace-nowrap">
-                        {new Date(row.created_at).toLocaleDateString()} {new Date(row.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(row.createdAt).toLocaleDateString()} {new Date(row.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </TableCell>
                       <TableCell>
                         <Badge variant={actionVariant(row.action)} className="text-xs whitespace-nowrap">

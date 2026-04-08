@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { EquipmentCategoryUpdate } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, equipmentCategories, activityLog } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { categoryUpdateSchema } from "@/lib/validations/equipment";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function PUT(
   request: NextRequest,
@@ -15,39 +12,32 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
-    const body: EquipmentCategoryUpdate = await request.json();
+    const body = await request.json();
+    const validatedData = categoryUpdateSchema.parse(body);
 
-    const { data, error } = await supabase
-      .from("equipment_categories")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
+    const [data] = await db
+      .update(equipmentCategories)
+      .set(validatedData)
+      .where(eq(equipmentCategories.id, id))
+      .returning();
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json(
-          { error: "Category not found" },
-          { status: 404 },
-        );
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) {
+      return notFoundResponse("Category");
     }
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "category_updated",
-      detail: `Equipment category "${body.name ?? id}" was updated`,
+      detail: `Equipment category "${validatedData.name ?? id}" was updated`,
     });
 
-    return NextResponse.json({ data }, { status: 200 });
+    return successResponse(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }
 
@@ -57,33 +47,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
-
     const adminId = await getSessionUserId();
 
-    const { error } = await supabase
-      .from("equipment_categories")
-      .delete()
-      .eq("id", id);
+    await db
+      .delete(equipmentCategories)
+      .where(eq(equipmentCategories.id, id));
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "category_deleted",
       detail: `Equipment category (id: ${id}) was deleted`,
     });
 
-    return NextResponse.json(
-      { message: "Category deleted successfully" },
-      { status: 200 },
-    );
+    return successResponse({ message: "Category deleted successfully" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }

@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import type { RoomAvailabilityInsert } from "@/lib/supabase/types";
+import { NextRequest } from "next/server";
+import { db, roomAvailability } from "@/lib/db";
+import { eq, asc } from "drizzle-orm";
+import { roomAvailabilityBatchSchema } from "@/lib/validations/room";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
+import type { RoomAvailabilityInsert } from "@/lib/db/types";
 
 // GET /api/rooms/[id]/availability — get availability schedule for a room
 export async function GET(
@@ -9,127 +13,59 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
 
-    const { data, error } = await supabase
-      .from("room_availability")
-      .select("*")
-      .eq("room_id", id)
-      .order("day_of_week", { ascending: true })
-      .order("start_hour", { ascending: true });
+    const data = await db
+      .select()
+      .from(roomAvailability)
+      .where(eq(roomAvailability.roomId, id))
+      .orderBy(asc(roomAvailability.dayOfWeek), asc(roomAvailability.startHour));
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 // POST /api/rooms/[id]/availability — set availability (replaces all existing)
-// Body: { availability: Array<{ day_of_week: number, start_hour: number, end_hour: number }> }
+// Body: { availability: Array<{ dayOfWeek: number, startHour: number, endHour: number }> }
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
-    const body: {
-      availability: Array<{
-        day_of_week: number;
-        start_hour: number;
-        end_hour: number;
-      }>;
-    } = await request.json();
-
-    if (!Array.isArray(body.availability)) {
-      return NextResponse.json(
-        { error: "Request body must contain an 'availability' array" },
-        { status: 400 },
-      );
-    }
-
-    // Validate each entry
-    for (const entry of body.availability) {
-      if (
-        entry.day_of_week == null ||
-        entry.start_hour == null ||
-        entry.end_hour == null
-      ) {
-        return NextResponse.json(
-          {
-            error:
-              "Each availability entry must have day_of_week, start_hour, and end_hour",
-          },
-          { status: 400 },
-        );
-      }
-
-      if (entry.day_of_week < 0 || entry.day_of_week > 6) {
-        return NextResponse.json(
-          { error: "day_of_week must be between 0 (Sunday) and 6 (Saturday)" },
-          { status: 400 },
-        );
-      }
-
-      if (entry.start_hour >= entry.end_hour) {
-        return NextResponse.json(
-          { error: "start_hour must be less than end_hour" },
-          { status: 400 },
-        );
-      }
-    }
+    const body = await request.json();
+    const validatedData = roomAvailabilityBatchSchema.parse(body);
 
     // Delete all existing availability for this room
-    const { error: deleteError } = await supabase
-      .from("room_availability")
-      .delete()
-      .eq("room_id", id);
-
-    if (deleteError) {
-      return NextResponse.json(
-        { error: deleteError.message },
-        { status: 500 },
-      );
-    }
+    await db
+      .delete(roomAvailability)
+      .where(eq(roomAvailability.roomId, id));
 
     // Insert new availability records
-    if (body.availability.length > 0) {
-      const records: RoomAvailabilityInsert[] = body.availability.map(
+    if (validatedData.availability.length > 0) {
+      const records: RoomAvailabilityInsert[] = validatedData.availability.map(
         (entry) => ({
-          room_id: id,
-          day_of_week: entry.day_of_week,
-          start_hour: entry.start_hour,
-          end_hour: entry.end_hour,
+          roomId: id,
+          dayOfWeek: entry.dayOfWeek,
+          startHour: entry.startHour,
+          endHour: entry.endHour,
         }),
       );
 
-      const { data, error: insertError } = await supabase
-        .from("room_availability")
-        .insert(records)
-        .select();
+      const data = await db
+        .insert(roomAvailability)
+        .values(records)
+        .returning();
 
-      if (insertError) {
-        return NextResponse.json(
-          { error: insertError.message },
-          { status: 500 },
-        );
-      }
-
-      return NextResponse.json(data, { status: 201 });
+      return successResponse(data, 201);
     }
 
-    return NextResponse.json([], { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return successResponse([], 201);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

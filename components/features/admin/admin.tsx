@@ -137,7 +137,7 @@ export default function Admin() {
                             {roleLabel[row.role] ?? row.role}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm">{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-sm">{new Date(row.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           {row.role !== "super_admin" && (
                             <Button

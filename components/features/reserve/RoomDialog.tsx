@@ -22,7 +22,7 @@ import { useRoomReservationMutations } from "@/hooks/useRoomReservations";
 import { useRoomAvailability } from "@/hooks/useRooms";
 import { useAuth } from "@/lib/auth/context";
 import { type Room } from "./types";
-import type { RoomAvailability } from "@/lib/supabase/types";
+import type { RoomAvailability } from "@/lib/db/types";
 
 interface RoomDialogProps {
   room: Room | null;
@@ -36,8 +36,8 @@ function getAvailableStartHours(availability: RoomAvailability[], date: string):
   const dayOfWeek = new Date(date).getDay();
   const hours: number[] = [];
   for (const slot of availability) {
-    if (slot.day_of_week !== dayOfWeek) continue;
-    for (let h = slot.start_hour; h < slot.end_hour; h++) {
+    if (slot.dayOfWeek !== dayOfWeek) continue;
+    for (let h = slot.startHour; h < slot.endHour; h++) {
       hours.push(h);
     }
   }
@@ -46,10 +46,10 @@ function getAvailableStartHours(availability: RoomAvailability[], date: string):
 
 function getAvailableEndHours(availability: RoomAvailability[], startHour: number | null): number[] {
   if (startHour == null) return [];
-  const slot = availability.find(s => s.start_hour <= startHour && s.end_hour > startHour);
+  const slot = availability.find(s => s.startHour <= startHour && s.endHour > startHour);
   if (!slot) return [];
   const hours: number[] = [];
-  for (let h = startHour + 1; h <= slot.end_hour; h++) {
+  for (let h = startHour + 1; h <= slot.endHour; h++) {
     hours.push(h);
   }
   return hours;
@@ -107,11 +107,11 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
 
     try {
       await mutations.createRoomReservation({
-        room_id: room.id,
-        user_id: user.id,
-        reservation_date: date,
-        start_time: toTimeString(startHour),
-        end_time: toTimeString(endHour),
+        roomId: room.id,
+        userId: user.id,
+        reservationDate: date,
+        startTime: toTimeString(startHour),
+        endTime: toTimeString(endHour),
         purpose: purpose.trim(),
       });
       setStep("confirmed");
@@ -147,7 +147,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
             <div>
               <h2 className="text-xl font-bold">Reservation Submitted!</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Your reservation for <span className="font-semibold">{room.name} ({room.room_number})</span> has been submitted for review.
+                Your reservation for <span className="font-semibold">{room.name} ({room.roomNumber})</span> has been submitted for review.
               </p>
             </div>
             <Button className="w-full" onClick={handleDone}>
@@ -157,7 +157,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
         ) : step === "form" ? (
           <>
             <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/40">
-              <p className="text-xs font-semibold text-primary">{room.room_number} &middot; {room.floor}</p>
+              <p className="text-xs font-semibold text-primary">{room.roomNumber} &middot; {room.floor}</p>
               <DialogTitle className="text-xl">Reserve {room.name}</DialogTitle>
               <DialogDescription className="sr-only">Fill in details to reserve this room.</DialogDescription>
             </DialogHeader>
@@ -168,7 +168,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                 <div className="rounded-lg bg-muted/50 p-3 text-sm">
                   <p className="font-medium text-foreground">{user.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {user.student_id || user.username} &middot; {user.department}
+                    {user.studentId || user.username} &middot; {user.department}
                   </p>
                 </div>
               )}
@@ -268,7 +268,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
           /* step === "info" — Room details view */
           <div className="p-6">
             <DialogHeader className="pb-4">
-              <p className="text-xs font-semibold text-primary">{room.room_number} &middot; {room.floor}</p>
+              <p className="text-xs font-semibold text-primary">{room.roomNumber} &middot; {room.floor}</p>
               <DialogTitle className="text-2xl">{room.name}</DialogTitle>
               <DialogDescription className="sr-only">Room details and reservation option.</DialogDescription>
               <span className={`inline-flex items-center gap-1.5 text-xs font-medium w-fit px-2 py-0.5 rounded-full
@@ -283,7 +283,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                 { label: "Room Type", value: room.type },
                 { label: "Capacity", value: room.capacity },
                 { label: "Floor", value: room.floor },
-                { label: "Room ID", value: room.room_number },
+                { label: "Room ID", value: room.roomNumber },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-muted rounded-lg p-3">
                   <p className="text-xs text-muted-foreground">{label}</p>

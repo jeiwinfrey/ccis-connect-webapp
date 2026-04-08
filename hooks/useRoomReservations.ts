@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRealtimeSubscription } from "./useRealtime";
-import type { RoomReservation, RoomReservationWithDetails } from "@/lib/supabase/types";
+import type { RoomReservation, RoomReservationWithDetails } from "@/lib/db/types";
 
 // ---------------------------------------------------------------------------
 // List room reservations
@@ -32,7 +31,6 @@ export function useRoomReservations(status?: string, userId?: string) {
   }, [status, userId]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("room_reservations", fetch);
 
   return { reservations, loading, error, refetch: fetch };
 }
@@ -45,11 +43,11 @@ export function useRoomReservationMutations() {
   const [loading, setLoading] = useState(false);
 
   async function createRoomReservation(data: {
-    room_id: string;
-    user_id: string;
-    reservation_date: string;
-    start_time: string;
-    end_time: string;
+    roomId: string;
+    userId: string;
+    reservationDate: string;
+    startTime: string;
+    endTime: string;
     purpose: string;
   }) {
     setLoading(true);
@@ -64,7 +62,7 @@ export function useRoomReservationMutations() {
     } finally { setLoading(false); }
   }
 
-  async function updateRoomReservation(id: string, data: { status?: string; admin_notes?: string }) {
+  async function updateRoomReservation(id: string, data: { status?: string; adminNotes?: string }) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/reservations/room/${id}`, {

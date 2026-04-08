@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRealtimeSubscription } from "./useRealtime";
-import type { User, ActivityLog } from "@/lib/supabase/types";
+import type { User, ActivityLog } from "@/lib/db/types";
 
 // ---------------------------------------------------------------------------
 // Admin users
@@ -29,7 +28,6 @@ export function useAdminUsers() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("users", fetch);
 
   return { users, loading, error, refetch: fetch };
 }
@@ -60,7 +58,6 @@ export function useUsers(role?: string) {
   }, [role]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("users", fetch);
 
   return { users, loading, error, refetch: fetch };
 }
@@ -91,7 +88,6 @@ export function useActivityLog(limit?: number) {
   }, [limit]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("activity_log", fetch);
 
   return { logs, loading, error, refetch: fetch };
 }
@@ -103,7 +99,7 @@ export function useActivityLog(limit?: number) {
 export function useAdminMutations() {
   const [loading, setLoading] = useState(false);
 
-  async function createUser(data: { name: string; email: string; role: string; department: string; student_id?: string }) {
+  async function createUser(data: { name: string; email: string; role: string; department: string; studentId?: string }) {
     setLoading(true);
     try {
       const res = await window.fetch("/api/admin/users", {

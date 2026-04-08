@@ -1,77 +1,50 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { BorrowRequest, BorrowRequestUpdate } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, borrowRequests, equipmentUnits, activityLog } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { borrowRequestUpdateSchema } from "@/lib/validations/borrow";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const supabase = await createAdminClient();
     const { id } = await params;
-    const body: BorrowRequestUpdate = await request.json();
+    const body = await request.json();
+    const validatedData = borrowRequestUpdateSchema.parse(body);
 
-    // Fetch the existing borrow request to get unit_id and previous status
-    const { data: existingData, error: fetchError } = await supabase
-      .from("borrow_requests")
-      .select("*, users(name)")
-      .eq("id", id)
-      .single();
+    // Fetch the existing borrow request to get unitId and previous status
+    const existing = await db.query.borrowRequests.findFirst({
+      where: eq(borrowRequests.id, id),
+      with: {
+        user: true,
+      },
+    });
 
-    if (fetchError || !existingData) {
-      return NextResponse.json(
-        { error: fetchError?.message ?? "Borrow request not found" },
-        { status: 404 },
-      );
+    if (!existing) {
+      return notFoundResponse("Borrow request");
     }
-
-    const existing = existingData as unknown as BorrowRequest & { users?: { name: string } };
 
     // Update the borrow request
-    const { data, error } = await supabase
-      .from("borrow_requests")
-      .update(body)
-      .eq("id", id)
-      .select("*, users(*), equipment_units(*, equipment_models(*))")
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    await db
+      .update(borrowRequests)
+      .set(validatedData)
+      .where(eq(borrowRequests.id, id));
 
     // Handle equipment unit status changes based on new status
-    if (body.status && body.status !== existing.status) {
-      if (body.status === "accepted") {
-        const { error: unitError } = await supabase
-          .from("equipment_units")
-          .update({ status: "on-loan" })
-          .eq("id", existing.unit_id);
-
-        if (unitError) {
-          return NextResponse.json(
-            { error: unitError.message },
-            { status: 500 },
-          );
-        }
-      } else if (body.status === "returned") {
-        const { error: unitError } = await supabase
-          .from("equipment_units")
-          .update({ status: "available" })
-          .eq("id", existing.unit_id);
-
-        if (unitError) {
-          return NextResponse.json(
-            { error: unitError.message },
-            { status: 500 },
-          );
-        }
+    if (validatedData.status && validatedData.status !== existing.status) {
+      if (validatedData.status === "accepted") {
+        await db
+          .update(equipmentUnits)
+          .set({ status: "on-loan" })
+          .where(eq(equipmentUnits.id, existing.unitId));
+      } else if (validatedData.status === "returned") {
+        await db
+          .update(equipmentUnits)
+          .set({ status: "available" })
+          .where(eq(equipmentUnits.id, existing.unitId));
       }
 
       // Log activity — record the admin who took the action
@@ -81,23 +54,36 @@ export async function PUT(
         returned: "borrow_request_returned",
       };
 
-      const action = actionMap[body.status];
+      const action = actionMap[validatedData.status];
       if (action) {
         const adminId = await getSessionUserId();
-        const requesterName = (existing as any).users?.name ?? "unknown";
-        await supabase.from("activity_log").insert({
-          user_id: adminId,
+        const requesterName = existing.user?.name ?? "unknown";
+        await db.insert(activityLog).values({
+          userId: adminId,
           action,
-          detail: `Borrow request by "${requesterName}" was ${body.status}`,
+          detail: `Borrow request by "${requesterName}" was ${validatedData.status}`,
         });
       }
     }
 
-    return NextResponse.json({ data }, { status: 200 });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    // Fetch the updated data with relations
+    const data = await db.query.borrowRequests.findFirst({
+      where: eq(borrowRequests.id, id),
+      with: {
+        user: true,
+        unit: {
+          with: {
+            model: true,
+          },
+        },
+      },
+    });
+
+    return successResponse(data);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

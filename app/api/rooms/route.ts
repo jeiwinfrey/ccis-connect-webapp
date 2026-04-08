@@ -1,72 +1,48 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { RoomInsert } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, rooms, activityLog } from "@/lib/db";
+import { asc } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { roomSchema } from "@/lib/validations/room";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 // GET /api/rooms — list all rooms
 export async function GET() {
   try {
-    const supabase = await createAdminClient();
+    const data = await db
+      .select()
+      .from(rooms)
+      .orderBy(asc(rooms.roomNumber));
 
-    const { data, error } = await supabase
-      .from("rooms")
-      .select("*")
-      .order("room_number", { ascending: true });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data);
+    return successResponse(data);
   } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 // POST /api/rooms — create a new room
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    const body: RoomInsert = await request.json();
+    const body = await request.json();
+    const validatedData = roomSchema.parse(body);
 
-    if (!body.room_number || !body.name || !body.type || !body.capacity || !body.floor) {
-      return NextResponse.json(
-        { error: "Missing required fields: room_number, name, type, capacity, floor" },
-        { status: 400 },
-      );
-    }
-
-    const { data, error } = await supabase
-      .from("rooms")
-      .insert(body)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const [data] = await db
+      .insert(rooms)
+      .values(validatedData)
+      .returning();
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "room_created",
-      detail: `Room "${body.name}" (${body.room_number}) was created`,
+      detail: `Room "${validatedData.name}" (${validatedData.roomNumber}) was created`,
     });
 
-    return NextResponse.json({ data }, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return successResponse(data, 201);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

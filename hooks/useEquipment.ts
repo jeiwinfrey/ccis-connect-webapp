@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRealtimeSubscription, useRealtimeSubscriptions } from "./useRealtime";
 import type {
   EquipmentCategory,
   EquipmentModel,
   EquipmentUnit,
   EquipmentCategoryWithModels,
   EquipmentModelWithUnits,
-} from "@/lib/supabase/types";
+} from "@/lib/db/types";
 
 export type { EquipmentCategory, EquipmentModel, EquipmentUnit };
 
@@ -38,7 +36,6 @@ export function useEquipmentCategories() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("equipment_categories", fetch);
 
   return { categories, loading, error, refetch: fetch };
 }
@@ -64,7 +61,6 @@ export function useEquipmentCategoriesWithModels() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscriptions(["equipment_categories", "equipment_models", "equipment_units"], fetch);
 
   return { categories, loading, error, refetch: fetch };
 }
@@ -97,7 +93,6 @@ export function useEquipmentModels(categoryId?: string) {
   }, [categoryId]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("equipment_models", fetch);
 
   return { models, loading, error, refetch: fetch };
 }
@@ -130,7 +125,6 @@ export function useEquipmentUnits(modelId?: string, status?: string) {
   }, [modelId, status]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("equipment_units", fetch);
 
   return { units, loading, error, refetch: fetch };
 }
@@ -140,8 +134,8 @@ export function useEquipmentUnits(modelId?: string, status?: string) {
 // ---------------------------------------------------------------------------
 
 export interface EquipmentUnitWithModelCategory extends EquipmentUnit {
-  equipment_models: EquipmentModel & {
-    equipment_categories: EquipmentCategory;
+  equipmentModels: EquipmentModel & {
+    equipmentCategories: EquipmentCategory;
   };
 }
 
@@ -168,7 +162,6 @@ export function useEquipmentUnitsWithModel(status?: string) {
   }, [status]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("equipment_units", fetch);
 
   return { units, loading, error, refetch: fetch };
 }
@@ -216,7 +209,7 @@ export function useEquipmentMutations() {
   }
 
   // Models
-  async function createModel(data: { category_id: string; model_name: string; description: string; image_url: string }) {
+  async function createModel(data: { categoryId: string; modelName: string; description: string; imageUrl: string }) {
     setLoading(true);
     try {
       const res = await window.fetch("/api/equipment/models", {
@@ -229,7 +222,7 @@ export function useEquipmentMutations() {
     } finally { setLoading(false); }
   }
 
-  async function updateModel(id: string, data: Partial<{ category_id: string; model_name: string; description: string; image_url: string }>) {
+  async function updateModel(id: string, data: Partial<{ categoryId: string; modelName: string; description: string; imageUrl: string }>) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/equipment/models/${id}`, {
@@ -251,7 +244,7 @@ export function useEquipmentMutations() {
   }
 
   // Units
-  async function createUnit(data: { model_id: string; unit_id: string; condition: string; status: string; notes: string }) {
+  async function createUnit(data: { modelId: string; unitId: string; condition: string; status: string; notes: string }) {
     setLoading(true);
     try {
       const res = await window.fetch("/api/equipment/units", {
@@ -264,7 +257,7 @@ export function useEquipmentMutations() {
     } finally { setLoading(false); }
   }
 
-  async function updateUnit(id: string, data: Partial<{ unit_id: string; condition: string; status: string; notes: string }>) {
+  async function updateUnit(id: string, data: Partial<{ unitId: string; condition: string; status: string; notes: string }>) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/equipment/units/${id}`, {

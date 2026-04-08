@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { EquipmentModelUpdate } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, equipmentModels, activityLog } from "@/lib/db";
+import { eq } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { modelUpdateSchema } from "@/lib/validations/equipment";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function PUT(
   request: NextRequest,
@@ -15,39 +12,32 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
-    const body: EquipmentModelUpdate = await request.json();
+    const body = await request.json();
+    const validatedData = modelUpdateSchema.parse(body);
 
-    const { data, error } = await supabase
-      .from("equipment_models")
-      .update(body)
-      .eq("id", id)
-      .select()
-      .single();
+    const [data] = await db
+      .update(equipmentModels)
+      .set(validatedData)
+      .where(eq(equipmentModels.id, id))
+      .returning();
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json(
-          { error: "Model not found" },
-          { status: 404 },
-        );
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) {
+      return notFoundResponse("Model");
     }
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "model_updated",
-      detail: `Equipment model "${body.model_name ?? id}" was updated`,
+      detail: `Equipment model "${validatedData.modelName ?? id}" was updated`,
     });
 
-    return NextResponse.json({ data }, { status: 200 });
+    return successResponse(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }
 
@@ -57,32 +47,20 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createAdminClient();
     const adminId = await getSessionUserId();
 
-    const { error } = await supabase
-      .from("equipment_models")
-      .delete()
-      .eq("id", id);
+    await db
+      .delete(equipmentModels)
+      .where(eq(equipmentModels.id, id));
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "model_deleted",
       detail: `Equipment model (id: ${id}) was deleted`,
     });
 
-    return NextResponse.json(
-      { message: "Model deleted successfully" },
-      { status: 200 },
-    );
+    return successResponse({ message: "Model deleted successfully" });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }

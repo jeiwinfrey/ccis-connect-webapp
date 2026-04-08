@@ -1,85 +1,83 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { EquipmentUnit, EquipmentUnitInsert } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, equipmentUnits, activityLog } from "@/lib/db";
+import { eq, and } from "drizzle-orm";
+import { getSessionUserId } from "@/lib/auth/session";
+import { unitSchema } from "@/lib/validations/equipment";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
+import type { EquipmentUnit } from "@/lib/db/types";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
     const modelId = request.nextUrl.searchParams.get("model_id");
     const status = request.nextUrl.searchParams.get("status");
     const include = request.nextUrl.searchParams.get("include");
 
-    const selectClause =
-      include === "model"
-        ? "*, equipment_models(*, equipment_categories(*))"
-        : "*";
-
-    let query = supabase.from("equipment_units").select(selectClause);
-
-    if (modelId) {
-      query = query.eq("model_id", modelId);
+    if (include === "model") {
+      const units = await db.query.equipmentUnits.findMany({
+        where: status ? eq(equipmentUnits.status, status as EquipmentUnit["status"]) : undefined,
+        with: {
+          model: {
+            with: {
+              category: true,
+            },
+          },
+        },
+      });
+      return successResponse(units);
     }
 
-    if (status) {
-      query = query.eq("status", status as EquipmentUnit["status"]);
+    let data;
+    if (modelId && status) {
+      data = await db
+        .select()
+        .from(equipmentUnits)
+        .where(and(
+          eq(equipmentUnits.modelId, modelId),
+          eq(equipmentUnits.status, status as EquipmentUnit["status"])
+        ));
+    } else if (modelId) {
+      data = await db
+        .select()
+        .from(equipmentUnits)
+        .where(eq(equipmentUnits.modelId, modelId));
+    } else if (status) {
+      data = await db
+        .select()
+        .from(equipmentUnits)
+        .where(eq(equipmentUnits.status, status as EquipmentUnit["status"]));
+    } else {
+      data = await db.select().from(equipmentUnits);
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 200 });
+    return successResponse(data);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    const body: EquipmentUnitInsert = await request.json();
+    const body = await request.json();
+    const validatedData = unitSchema.parse(body);
 
-    if (!body.model_id || !body.unit_id) {
-      return NextResponse.json(
-        { error: "model_id and unit_id are required" },
-        { status: 400 },
-      );
-    }
-
-    const { data, error } = await supabase
-      .from("equipment_units")
-      .insert(body)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const [data] = await db
+      .insert(equipmentUnits)
+      .values(validatedData)
+      .returning();
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "unit_created",
-      detail: `Equipment unit "${body.unit_id}" was created`,
+      detail: `Equipment unit "${validatedData.unitId}" was created`,
     });
 
-    return NextResponse.json({ data }, { status: 201 });
+    return successResponse(data, 201);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }

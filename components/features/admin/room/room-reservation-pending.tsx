@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { useRoomReservations, useRoomReservationMutations } from "@/hooks/useRoomReservations";
 import { useRooms } from "@/hooks/useRooms";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import type { RoomReservationWithDetails } from "@/lib/supabase/types";
+import type { RoomReservationWithDetails } from "@/lib/db/types";
 
 export default function RoomReservationPending() {
   const { reservations, loading, refetch } = useRoomReservations("pending");
@@ -35,7 +35,7 @@ export default function RoomReservationPending() {
     const purpose = row.purpose ?? "";
     const matchSearch = [userName, roomName, purpose]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
-    const matchRoom = room === "all" || row.room_id === room;
+    const matchRoom = room === "all" || row.roomId === room;
     return matchSearch && matchRoom;
   });
 
@@ -56,7 +56,7 @@ export default function RoomReservationPending() {
     try {
       await mutations.updateRoomReservation(declineTarget.id, {
         status: "rejected",
-        admin_notes: declineNotes.trim() || undefined,
+        adminNotes: declineNotes.trim() || undefined,
       });
       setDeclineTarget(null);
       setDeclineNotes("");
@@ -150,11 +150,11 @@ export default function RoomReservationPending() {
                           <div className="text-xs text-muted-foreground">{row.users?.department ?? ""}</div>
                         </TableCell>
                         <TableCell className="text-sm">{row.rooms?.name ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{row.reservation_date}</TableCell>
+                        <TableCell className="text-sm">{row.reservationDate}</TableCell>
                         <TableCell className="text-sm whitespace-nowrap">
-                          {formatTime(row.start_time)} – {formatTime(row.end_time)}
+                          {formatTime(row.startTime)} – {formatTime(row.endTime)}
                         </TableCell>
-                        <TableCell className="text-sm">{formatDuration(row.start_time, row.end_time)}</TableCell>
+                        <TableCell className="text-sm">{formatDuration(row.startTime, row.endTime)}</TableCell>
                         <TableCell className="text-sm max-w-[200px] truncate">{row.purpose}</TableCell>
                         <TableCell><StatusBadge status={row.status} /></TableCell>
                         <TableCell className="whitespace-nowrap">
@@ -237,16 +237,16 @@ export default function RoomReservationPending() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Date</p>
-                    <p className="text-sm font-medium text-foreground">{selected.reservation_date}</p>
+                    <p className="text-sm font-medium text-foreground">{selected.reservationDate}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Duration</p>
-                    <p className="text-sm font-medium text-foreground">{formatDuration(selected.start_time, selected.end_time)}</p>
+                    <p className="text-sm font-medium text-foreground">{formatDuration(selected.startTime, selected.endTime)}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-xs text-muted-foreground">Time</p>
                     <p className="text-sm font-medium text-foreground">
-                      {formatTime(selected.start_time)} – {formatTime(selected.end_time)}
+                      {formatTime(selected.startTime)} – {formatTime(selected.endTime)}
                     </p>
                   </div>
                 </div>

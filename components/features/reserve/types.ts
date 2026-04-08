@@ -1,6 +1,6 @@
 "use client";
 
-import type { Room as SupabaseRoom, RoomReservationWithDetails } from "@/lib/supabase/types";
+import type { Room as SupabaseRoom, RoomReservationWithDetails } from "@/lib/db/types";
 
 // Re-export Supabase Room type
 export type { SupabaseRoom };
@@ -11,7 +11,7 @@ export type { SupabaseRoom };
 
 export interface Room {
   id: string;             // Supabase uuid
-  room_number: string;    // e.g. "R101"
+  roomNumber: string;    // e.g. "R101"
   name: string;
   type: string;
   capacity: string;
@@ -35,27 +35,27 @@ export function mapRoomsToUI(
     if (res.status !== "accepted") continue;
 
     // Check if the reservation is currently active
-    const resDate = new Date(res.reservation_date);
+    const resDate = new Date(res.reservationDate);
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const reservationDay = new Date(resDate.getFullYear(), resDate.getMonth(), resDate.getDate());
 
     if (reservationDay.getTime() === today.getTime()) {
       // Check time overlap with current time
-      const [startH, startM] = res.start_time.split(":").map(Number);
-      const [endH, endM] = res.end_time.split(":").map(Number);
+      const [startH, startM] = res.startTime.split(":").map(Number);
+      const [endH, endM] = res.endTime.split(":").map(Number);
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
       const startMinutes = startH * 60 + (startM || 0);
       const endMinutes = endH * 60 + (endM || 0);
 
       if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
-        occupiedRoomIds.add(res.room_id);
+        occupiedRoomIds.add(res.roomId);
       }
     }
   }
 
   return rooms.map((room) => ({
     id: room.id,
-    room_number: room.room_number,
+    roomNumber: room.roomNumber,
     name: room.name,
     type: room.type,
     capacity: room.capacity,

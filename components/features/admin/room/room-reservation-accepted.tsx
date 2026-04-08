@@ -74,11 +74,11 @@ export default function RoomReservationAccepted() {
                         <div className="text-xs text-muted-foreground">{row.users?.department ?? ""}</div>
                       </TableCell>
                       <TableCell className="text-sm">{row.rooms?.name ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{row.reservation_date}</TableCell>
+                      <TableCell className="text-sm">{row.reservationDate}</TableCell>
                       <TableCell className="text-sm whitespace-nowrap">
-                        {formatTime(row.start_time)} – {formatTime(row.end_time)}
+                        {formatTime(row.startTime)} – {formatTime(row.endTime)}
                       </TableCell>
-                      <TableCell className="text-sm">{new Date(row.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="text-sm">{new Date(row.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell><StatusBadge status="accepted" /></TableCell>
                     </TableRow>
                   ))}

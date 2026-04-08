@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRealtimeSubscription } from "./useRealtime";
-import type { Room, RoomAvailability } from "@/lib/supabase/types";
+import type { Room, RoomAvailability } from "@/lib/db/types";
 
 // ---------------------------------------------------------------------------
 // Rooms list
@@ -29,7 +28,6 @@ export function useRooms() {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("rooms", fetch);
 
   return { rooms, loading, error, refetch: fetch };
 }
@@ -60,7 +58,6 @@ export function useRoomAvailability(roomId: string | null) {
   }, [roomId]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("room_availability", fetch, !!roomId);
 
   return { availability, loading, error, refetch: fetch };
 }
@@ -92,7 +89,6 @@ export function useAvailableRooms(date?: string, startTime?: string, endTime?: s
   }, [date, startTime, endTime]);
 
   useEffect(() => { fetch(); }, [fetch]);
-  useRealtimeSubscription("room_reservations", fetch, !!(date && startTime && endTime));
 
   return { rooms, loading, error, refetch: fetch };
 }
@@ -104,7 +100,7 @@ export function useAvailableRooms(date?: string, startTime?: string, endTime?: s
 export function useRoomMutations() {
   const [loading, setLoading] = useState(false);
 
-  async function createRoom(data: { room_number: string; name: string; type: string; capacity: string; floor: string }) {
+  async function createRoom(data: { roomNumber: string; name: string; type: string; capacity: string; floor: string }) {
     setLoading(true);
     try {
       const res = await window.fetch("/api/rooms", {
@@ -117,7 +113,7 @@ export function useRoomMutations() {
     } finally { setLoading(false); }
   }
 
-  async function updateRoom(id: string, data: Partial<{ room_number: string; name: string; type: string; capacity: string; floor: string }>) {
+  async function updateRoom(id: string, data: Partial<{ roomNumber: string; name: string; type: string; capacity: string; floor: string }>) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/rooms/${id}`, {
@@ -138,7 +134,7 @@ export function useRoomMutations() {
     } finally { setLoading(false); }
   }
 
-  async function setAvailability(roomId: string, slots: { day_of_week: number; start_hour: number; end_hour: number }[]) {
+  async function setAvailability(roomId: string, slots: { dayOfWeek: number; startHour: number; endHour: number }[]) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/rooms/${roomId}/availability`, {

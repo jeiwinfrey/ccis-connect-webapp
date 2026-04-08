@@ -1,78 +1,56 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
-import { cookies } from "next/headers";
-import type { EquipmentCategoryInsert } from "@/lib/supabase/types";
-
-const SESSION_COOKIE = "ccis_session";
-async function getSessionUserId(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(SESSION_COOKIE)?.value ?? null;
-}
+import { NextRequest } from "next/server";
+import { db, equipmentCategories, activityLog } from "@/lib/db";
+import { getSessionUserId } from "@/lib/auth/session";
+import { categorySchema } from "@/lib/validations/equipment";
+import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { ZodError } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
     const include = request.nextUrl.searchParams.get("include");
 
-    let query;
-
     if (include === "models") {
-      query = supabase
-        .from("equipment_categories")
-        .select("*, equipment_models(*, equipment_units(*))");
+      const categories = await db.query.equipmentCategories.findMany({
+        with: {
+          models: {
+            with: {
+              units: true,
+            },
+          },
+        },
+      });
+      return successResponse(categories);
     } else {
-      query = supabase.from("equipment_categories").select("*");
+      const data = await db.select().from(equipmentCategories);
+      return successResponse(data);
     }
-
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createAdminClient();
-    const body: EquipmentCategoryInsert = await request.json();
+    const body = await request.json();
+    const validatedData = categorySchema.parse(body);
 
-    if (!body.name) {
-      return NextResponse.json(
-        { error: "Category name is required" },
-        { status: 400 },
-      );
-    }
-
-    const { data, error } = await supabase
-      .from("equipment_categories")
-      .insert(body)
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
+    const [data] = await db
+      .insert(equipmentCategories)
+      .values(validatedData)
+      .returning();
 
     const adminId = await getSessionUserId();
-    await supabase.from("activity_log").insert({
-      user_id: adminId,
+    await db.insert(activityLog).values({
+      userId: adminId,
       action: "category_created",
-      detail: `Equipment category "${body.name}" was created`,
+      detail: `Equipment category "${validatedData.name}" was created`,
     });
 
-    return NextResponse.json({ data }, { status: 201 });
+    return successResponse(data, 201);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    if (error instanceof ZodError) {
+      return validationErrorResponse(error);
+    }
+    return errorResponse("Internal server error");
   }
 }
