@@ -47,6 +47,12 @@ export function BorrowFormDialog({
 
   if (!item || !unit) return null;
 
+  // Get today's date in YYYY-MM-DD format for min date validation
+  const today = new Date().toISOString().split('T')[0];
+
+  // Validate dates
+  const isValidDates = borrowDate && returnDate && borrowDate >= today && returnDate >= borrowDate;
+
   function resetForm() {
     setBorrowDate("");
     setReturnDate("");
@@ -137,6 +143,7 @@ export function BorrowFormDialog({
                 type="date"
                 value={borrowDate}
                 onChange={(e) => setBorrowDate(e.target.value)}
+                min={today}
                 required
               />
             </div>
@@ -149,6 +156,7 @@ export function BorrowFormDialog({
                 type="date"
                 value={returnDate}
                 onChange={(e) => setReturnDate(e.target.value)}
+                min={borrowDate || today}
                 required
               />
             </div>
@@ -184,7 +192,7 @@ export function BorrowFormDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={mutations.loading || !borrowDate || !returnDate || !purpose.trim()}
+            disabled={mutations.loading || !isValidDates || !purpose.trim()}
           >
             {mutations.loading ? (
               <>
