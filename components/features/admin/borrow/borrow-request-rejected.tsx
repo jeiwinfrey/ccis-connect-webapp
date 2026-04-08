@@ -14,9 +14,9 @@ export default function BorrowRequestRejected() {
   const [search, setSearch] = useState("");
 
   const filtered = requests.filter(row => {
-    const userName = row.users?.name ?? "";
-    const unitId = row.equipmentUnits?.unitId ?? "";
-    const modelName = row.equipmentUnits?.equipmentModels?.modelName ?? "";
+    const userName = row.user?.name ?? "";
+    const unitId = row.unit?.unitId ?? "";
+    const modelName = row.unit?.model?.modelName ?? "";
     return [userName, unitId, modelName, row.adminNotes ?? ""]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -61,9 +61,9 @@ export default function BorrowRequestRejected() {
                     </TableRow>
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-semibold text-sm">{row.users?.name ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{row.equipmentUnits?.equipmentModels?.modelName ?? "—"}</TableCell>
-                      <TableCell className="text-sm font-mono">{row.equipmentUnits?.unitId ?? "—"}</TableCell>
+                      <TableCell className="font-semibold text-sm">{row.user?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{row.unit?.model?.modelName ?? "—"}</TableCell>
+                      <TableCell className="text-sm font-mono">{row.unit?.unitId ?? "—"}</TableCell>
                       <TableCell className="text-sm">{row.startDate} – {row.endDate}</TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-[250px] truncate">{row.adminNotes || "—"}</TableCell>
                       <TableCell><StatusBadge status="rejected" /></TableCell>

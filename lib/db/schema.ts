@@ -111,7 +111,7 @@ export const activityLog = pgTable("activity_log", {
 
 // Relations
 export const equipmentCategoriesRelations = relations(equipmentCategories, ({ many }) => ({
-  models: many(equipmentModels),
+  equipmentModels: many(equipmentModels),
 }));
 
 export const equipmentModelsRelations = relations(equipmentModels, ({ one, many }) => ({
@@ -119,7 +119,7 @@ export const equipmentModelsRelations = relations(equipmentModels, ({ one, many 
     fields: [equipmentModels.categoryId],
     references: [equipmentCategories.id],
   }),
-  units: many(equipmentUnits),
+  equipmentUnits: many(equipmentUnits),
 }));
 
 export const equipmentUnitsRelations = relations(equipmentUnits, ({ one, many }) => ({

@@ -14,8 +14,8 @@ export default function RoomReservationRejected() {
   const [search, setSearch] = useState("");
 
   const filtered = reservations.filter(row => {
-    const userName = row.users?.name ?? "";
-    const roomName = row.rooms?.name ?? "";
+    const userName = row.user?.name ?? "";
+    const roomName = row.room?.name ?? "";
     const notes = row.adminNotes ?? "";
     return [userName, roomName, notes]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
@@ -70,10 +70,10 @@ export default function RoomReservationRejected() {
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell>
-                        <div className="font-semibold text-sm">{row.users?.name ?? "—"}</div>
-                        <div className="text-xs text-muted-foreground">{row.users?.department ?? ""}</div>
+                        <div className="font-semibold text-sm">{row.user?.name ?? "—"}</div>
+                        <div className="text-xs text-muted-foreground">{row.user?.department ?? ""}</div>
                       </TableCell>
-                      <TableCell className="text-sm">{row.rooms?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{row.room?.name ?? "—"}</TableCell>
                       <TableCell className="text-sm">{row.reservationDate}</TableCell>
                       <TableCell className="text-sm whitespace-nowrap">
                         {formatTime(row.startTime)} – {formatTime(row.endTime)}

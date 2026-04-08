@@ -37,13 +37,13 @@ export default function User() {
   const pendingRequests = [
     ...pendingBorrows.map((r) => ({
       type: "Borrow" as const,
-      item: r.equipmentUnits?.equipmentModels?.modelName ?? "Equipment",
+      item: r.unit?.model?.modelName ?? "Equipment",
       dates: formatDateRange(r.startDate, r.endDate),
       submitted: formatShort(r.createdAt.toString()),
     })),
     ...pendingReservations.map((r) => ({
       type: "Room" as const,
-      item: r.rooms?.name ?? "Room",
+      item: r.room?.name ?? "Room",
       dates: formatShort(r.reservationDate),
       submitted: formatShort(r.createdAt.toString()),
     })),
@@ -52,8 +52,8 @@ export default function User() {
   const borrowHistory = allBorrows
     .filter((r) => r.status === "accepted" || r.status === "returned")
     .map((r) => ({
-      equipment: r.equipmentUnits?.equipmentModels?.modelName ?? "Equipment",
-      unitId: r.equipmentUnits?.unitId ?? "",
+      equipment: r.unit?.model?.modelName ?? "Equipment",
+      unitId: r.unit?.unitId ?? "",
       dates: formatDateRange(r.startDate, r.endDate),
       status: r.status === "accepted" ? ("active" as const) : ("returned" as const),
     }));
@@ -61,8 +61,8 @@ export default function User() {
   const roomHistory = allReservations
     .filter((r) => r.status === "accepted")
     .map((r) => ({
-      room: r.rooms?.name ?? "Room",
-      roomNumber: r.rooms?.roomNumber ?? "",
+      room: r.room?.name ?? "Room",
+      roomNumber: r.room?.roomNumber ?? "",
       date: formatShort(r.reservationDate),
       time: `${formatTime(r.startTime)} - ${formatTime(r.endTime)}`,
       status: "confirmed" as const,

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion } from "@/components/ui/accordion";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useEquipmentCategoriesWithModels } from "@/hooks/useEquipment";
 import { useBorrowRequests } from "@/hooks/useBorrowRequests";
+import { useAuth } from "@/lib/auth/context";
 import {
   mapCategoriesToUI,
   mapBorrowRequestToUI,
@@ -15,22 +16,34 @@ import { PendingDialog } from "@/components/features/borrow/PendingDialog";
 import { RejectedDialog } from "@/components/features/borrow/RejectedDialog";
 
 export default function BorrowEquipment() {
+  const { user } = useAuth();
   const [pendingOpen, setPendingOpen] = useState(false);
   const [rejectedOpen, setRejectedOpen] = useState(false);
 
-  // Fetch categories with models + units from Supabase
-  const { categories: rawCategories, loading: catLoading } =
+  // Fetch categories with models + units
+  const { categories: rawCategories, loading: catLoading, refetch: refetchCategories } =
     useEquipmentCategoriesWithModels();
 
   // Fetch accepted borrow requests (for borrower info on on-loan units)
-  const { requests: acceptedBorrows } = useBorrowRequests("accepted");
+  const { requests: acceptedBorrows, refetch: refetchAccepted } = useBorrowRequests("accepted");
 
   // Fetch user's pending & rejected borrow requests
-  // NOTE: No auth yet, so we fetch ALL pending/rejected requests
-  const { requests: pendingRaw, loading: pendingLoading } =
-    useBorrowRequests("pending");
-  const { requests: rejectedRaw, loading: rejectedLoading } =
-    useBorrowRequests("rejected");
+  const { requests: pendingRaw, loading: pendingLoading, refetch: refetchPending } =
+    useBorrowRequests("pending", user?.id);
+  const { requests: rejectedRaw, loading: rejectedLoading, refetch: refetchRejected } =
+    useBorrowRequests("rejected", user?.id);
+
+  // Auto-refresh data every 30 seconds to keep user and admin in sync
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchCategories();
+      refetchAccepted();
+      refetchPending();
+      refetchRejected();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetchCategories, refetchAccepted, refetchPending, refetchRejected]);
 
   // Map Supabase data → UI types
   const categories = mapCategoriesToUI(rawCategories, acceptedBorrows);

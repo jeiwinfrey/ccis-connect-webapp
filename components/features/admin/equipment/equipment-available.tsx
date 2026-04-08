@@ -24,10 +24,10 @@ export default function EquipmentAvailable() {
   const [category, setCategory] = useState("all");
 
   const filtered = units.filter(row => {
-    const modelName = row.equipmentModels?.modelName ?? "";
+    const modelName = row.model?.modelName ?? "";
     const matchSearch = [modelName, row.unitId, row.notes]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
-    const matchCat = category === "all" || row.equipmentModels?.equipmentCategories?.id === category;
+    const matchCat = category === "all" || row.model?.category?.id === category;
     return matchSearch && matchCat;
   });
 
@@ -93,9 +93,9 @@ export default function EquipmentAvailable() {
                     </TableRow>
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-semibold text-sm">{row.equipmentModels?.modelName ?? "—"}</TableCell>
+                      <TableCell className="font-semibold text-sm">{row.model?.modelName ?? "—"}</TableCell>
                       <TableCell className="text-sm font-mono">{row.unitId}</TableCell>
-                      <TableCell className="text-sm">{row.equipmentModels?.equipmentCategories?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{row.model?.category?.name ?? "—"}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={`text-xs ${conditionBadge[row.condition] ?? ""}`}>
                           {row.condition}

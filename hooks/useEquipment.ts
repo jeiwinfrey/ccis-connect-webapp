@@ -134,8 +134,8 @@ export function useEquipmentUnits(modelId?: string, status?: string) {
 // ---------------------------------------------------------------------------
 
 export interface EquipmentUnitWithModelCategory extends EquipmentUnit {
-  equipmentModels: EquipmentModel & {
-    equipmentCategories: EquipmentCategory;
+  model: EquipmentModel & {
+    category: EquipmentCategory;
   };
 }
 

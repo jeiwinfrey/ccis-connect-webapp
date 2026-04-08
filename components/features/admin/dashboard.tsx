@@ -40,14 +40,14 @@ export default function Dashboard() {
   const pendingActions = [
     ...pendingBorrows.map(b => ({
       type: "Borrow" as const,
-      requestor: b.users?.name ?? "—",
-      item: b.equipmentUnits?.equipmentModels?.modelName ?? "—",
+      requestor: b.user?.name ?? "—",
+      item: b.unit?.model?.modelName ?? "—",
       submitted: new Date(b.createdAt).toLocaleDateString(),
     })),
     ...pendingReservations.map(r => ({
       type: "Room" as const,
-      requestor: r.users?.name ?? "—",
-      item: r.rooms?.name ?? "—",
+      requestor: r.user?.name ?? "—",
+      item: r.room?.name ?? "—",
       submitted: new Date(r.createdAt).toLocaleDateString(),
     })),
   ].slice(0, 8);

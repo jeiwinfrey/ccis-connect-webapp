@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IconCheck, IconX, IconFileText, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { useBorrowRequests, useBorrowMutations } from "@/hooks/useBorrowRequests";
@@ -25,10 +25,18 @@ export default function BorrowRequestPending() {
   const [rejectTarget, setRejectTarget] = useState<BorrowRequestWithDetails | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
 
+  // Auto-refresh every 30 seconds to stay in sync with user actions
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
   const filtered = requests.filter(row => {
-    const userName = row.users?.name ?? "";
-    const unitId = row.equipmentUnits?.unitId ?? "";
-    const modelName = row.equipmentUnits?.equipmentModels?.modelName ?? "";
+    const userName = row.user?.name ?? "";
+    const unitId = row.unit?.unitId ?? "";
+    const modelName = row.unit?.model?.modelName ?? "";
     return [userName, unitId, modelName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -114,11 +122,11 @@ export default function BorrowRequestPending() {
                     ) : filtered.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>
-                          <div className="font-semibold text-sm">{row.users?.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{row.users?.studentId ?? row.users?.email ?? ""}</div>
+                          <div className="font-semibold text-sm">{row.user?.name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground">{row.user?.studentId ?? row.user?.email ?? ""}</div>
                         </TableCell>
-                        <TableCell className="text-sm">{row.equipmentUnits?.equipmentModels?.modelName ?? "—"}</TableCell>
-                        <TableCell className="text-sm font-mono">{row.equipmentUnits?.unitId ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{row.unit?.model?.modelName ?? "—"}</TableCell>
+                        <TableCell className="text-sm font-mono">{row.unit?.unitId ?? "—"}</TableCell>
                         <TableCell className="text-sm">{row.startDate}</TableCell>
                         <TableCell className="text-sm">{row.endDate}</TableCell>
                         <TableCell className="text-sm">{new Date(row.createdAt).toLocaleDateString()}</TableCell>
@@ -179,12 +187,12 @@ export default function BorrowRequestPending() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Requestor</p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{selected.users?.name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{selected.users?.studentId ?? ""}</p>
+                    <p className="text-sm font-semibold text-foreground">{selected.user?.name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{selected.user?.studentId ?? ""}</p>
                   </div>
                   <StatusBadge status={selected.status} />
                 </div>
-                <p className="text-xs text-muted-foreground">{selected.users?.email ?? ""}</p>
+                <p className="text-xs text-muted-foreground">{selected.user?.email ?? ""}</p>
               </div>
 
               <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
@@ -192,11 +200,11 @@ export default function BorrowRequestPending() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Item</p>
-                    <p className="text-sm font-medium text-foreground">{selected.equipmentUnits?.equipmentModels?.modelName ?? "—"}</p>
+                    <p className="text-sm font-medium text-foreground">{selected.unit?.model?.modelName ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Unit ID</p>
-                    <p className="text-sm font-mono font-medium text-foreground">{selected.equipmentUnits?.unitId ?? "—"}</p>
+                    <p className="text-sm font-mono font-medium text-foreground">{selected.unit?.unitId ?? "—"}</p>
                   </div>
                 </div>
               </div>
@@ -253,8 +261,8 @@ export default function BorrowRequestPending() {
           <DialogHeader>
             <DialogTitle>Reject Borrow Request</DialogTitle>
             <DialogDescription>
-              Rejecting request from <span className="font-semibold">{rejectTarget?.users?.name ?? "—"}</span> for{" "}
-              <span className="font-semibold">{rejectTarget?.equipmentUnits?.equipmentModels?.modelName ?? "—"}</span>.
+              Rejecting request from <span className="font-semibold">{rejectTarget?.user?.name ?? "—"}</span> for{" "}
+              <span className="font-semibold">{rejectTarget?.unit?.model?.modelName ?? "—"}</span>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">

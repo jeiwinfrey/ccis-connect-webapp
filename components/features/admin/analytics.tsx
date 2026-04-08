@@ -109,7 +109,7 @@ export default function Analytics() {
   const roomData = useMemo(() => {
     const roomCounts: Record<string, { name: string; reservations: number }> = {};
     reservations.forEach((r) => {
-      const name = r.rooms?.name ?? "Unknown";
+      const name = r.room?.name ?? "Unknown";
       if (!roomCounts[name]) roomCounts[name] = { name, reservations: 0 };
       roomCounts[name].reservations++;
     });
@@ -122,7 +122,7 @@ export default function Analytics() {
   const equipmentData = useMemo(() => {
     const catCounts: Record<string, { category: string; available: number; "on-loan": number; maintenance: number }> = {};
     units.forEach((u) => {
-      const cat = u.equipmentModels?.equipmentCategories?.name ?? "Other";
+      const cat = u.model?.category?.name ?? "Other";
       if (!catCounts[cat]) catCounts[cat] = { category: cat, available: 0, "on-loan": 0, maintenance: 0 };
       if (u.status === "available") catCounts[cat].available++;
       else if (u.status === "on-loan") catCounts[cat]["on-loan"]++;

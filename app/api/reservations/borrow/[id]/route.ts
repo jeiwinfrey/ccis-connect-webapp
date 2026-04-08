@@ -40,7 +40,8 @@ export async function PUT(
           .update(equipmentUnits)
           .set({ status: "on-loan" })
           .where(eq(equipmentUnits.id, existing.unitId));
-      } else if (validatedData.status === "returned") {
+      } else if (validatedData.status === "returned" || validatedData.status === "rejected") {
+        // When returned or rejected, set unit back to available
         await db
           .update(equipmentUnits)
           .set({ status: "available" })

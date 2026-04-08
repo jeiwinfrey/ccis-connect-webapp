@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
     if (include === "models") {
       const categories = await db.query.equipmentCategories.findMany({
         with: {
-          models: {
+          equipmentModels: {
             with: {
-              units: true,
+              equipmentUnits: true,
             },
           },
         },

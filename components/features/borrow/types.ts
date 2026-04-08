@@ -105,7 +105,7 @@ export function mapCategoriesToUI(
           notes: u.notes || "",
           condition: u.condition,
           status: u.status,
-          borrower: borrow ? borrow.users?.name : undefined,
+          borrower: borrow ? borrow.user?.name : undefined,
           dueBack: borrow ? borrow.endDate : undefined,
         };
       });
@@ -147,10 +147,10 @@ function dayDiff(start: string, end: string): number {
 
 export function mapBorrowRequestToUI(req: BorrowRequestWithDetails): BorrowRequestUI {
   const modelName =
-    req.equipmentUnits?.equipmentModels?.modelName ?? "Unknown";
-  const catEmoji = (req.equipmentUnits?.equipmentModels as any)
+    req.unit?.model?.modelName ?? "Unknown";
+  const catEmoji = (req.unit?.model as any)
     ?.equipmentCategories?.emoji ?? "📦";
-  const catName = (req.equipmentUnits?.equipmentModels as any)
+  const catName = (req.unit?.model as any)
     ?.equipmentCategories?.name ?? "Equipment";
   const days = dayDiff(req.startDate, req.endDate);
 

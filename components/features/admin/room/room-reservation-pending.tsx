@@ -30,8 +30,8 @@ export default function RoomReservationPending() {
   const [declineNotes, setDeclineNotes] = useState("");
 
   const filtered = reservations.filter(row => {
-    const userName = row.users?.name ?? "";
-    const roomName = row.rooms?.name ?? "";
+    const userName = row.user?.name ?? "";
+    const roomName = row.room?.name ?? "";
     const purpose = row.purpose ?? "";
     const matchSearch = [userName, roomName, purpose]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
@@ -146,10 +146,10 @@ export default function RoomReservationPending() {
                     ) : filtered.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell>
-                          <div className="font-semibold text-sm">{row.users?.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{row.users?.department ?? ""}</div>
+                          <div className="font-semibold text-sm">{row.user?.name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground">{row.user?.department ?? ""}</div>
                         </TableCell>
-                        <TableCell className="text-sm">{row.rooms?.name ?? "—"}</TableCell>
+                        <TableCell className="text-sm">{row.room?.name ?? "—"}</TableCell>
                         <TableCell className="text-sm">{row.reservationDate}</TableCell>
                         <TableCell className="text-sm whitespace-nowrap">
                           {formatTime(row.startTime)} – {formatTime(row.endTime)}
@@ -214,20 +214,20 @@ export default function RoomReservationPending() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Requestor</p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-foreground">{selected.users?.name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{selected.users?.department ?? ""}</p>
+                    <p className="text-sm font-semibold text-foreground">{selected.user?.name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{selected.user?.department ?? ""}</p>
                   </div>
                   <StatusBadge status={selected.status} />
                 </div>
-                <p className="text-xs text-muted-foreground">{selected.users?.email ?? ""}</p>
+                <p className="text-xs text-muted-foreground">{selected.user?.email ?? ""}</p>
               </div>
 
               {/* Room */}
               <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Room</p>
-                <p className="text-sm font-medium text-foreground">{selected.rooms?.name ?? "—"}</p>
+                <p className="text-sm font-medium text-foreground">{selected.room?.name ?? "—"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {selected.rooms?.type} — Floor {selected.rooms?.floor} — Capacity: {selected.rooms?.capacity}
+                  {selected.room?.type} — Floor {selected.room?.floor} — Capacity: {selected.room?.capacity}
                 </p>
               </div>
 
@@ -291,8 +291,8 @@ export default function RoomReservationPending() {
           <DialogHeader>
             <DialogTitle>Decline Room Reservation</DialogTitle>
             <DialogDescription>
-              Declining reservation from <span className="font-semibold">{declineTarget?.users?.name ?? "—"}</span> for{" "}
-              <span className="font-semibold">{declineTarget?.rooms?.name ?? "—"}</span>.
+              Declining reservation from <span className="font-semibold">{declineTarget?.user?.name ?? "—"}</span> for{" "}
+              <span className="font-semibold">{declineTarget?.room?.name ?? "—"}</span>.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">

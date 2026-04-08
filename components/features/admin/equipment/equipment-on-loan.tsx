@@ -31,9 +31,9 @@ export default function EquipmentOnLoan() {
   );
 
   const filtered = units.filter(row => {
-    const modelName = row.equipmentModels?.modelName ?? "";
+    const modelName = row.model?.modelName ?? "";
     const borrow = borrowMap.get(row.id);
-    const borrowerName = borrow?.users?.name ?? "";
+    const borrowerName = borrow?.user?.name ?? "";
     return [modelName, row.unitId, borrowerName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -102,11 +102,11 @@ export default function EquipmentOnLoan() {
                     const borrow = borrowMap.get(row.id);
                     return (
                       <TableRow key={row.id}>
-                        <TableCell className="font-semibold text-sm">{row.equipmentModels?.modelName ?? "—"}</TableCell>
+                        <TableCell className="font-semibold text-sm">{row.model?.modelName ?? "—"}</TableCell>
                         <TableCell className="text-sm font-mono">{row.unitId}</TableCell>
                         <TableCell>
-                          <div className="font-semibold text-sm">{borrow?.users?.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{borrow?.users?.studentId ?? ""}</div>
+                          <div className="font-semibold text-sm">{borrow?.user?.name ?? "—"}</div>
+                          <div className="text-xs text-muted-foreground">{borrow?.user?.studentId ?? ""}</div>
                         </TableCell>
                         <TableCell className="text-sm">{borrow?.startDate ?? "—"}</TableCell>
                         <TableCell className="text-sm">{borrow?.endDate ?? "—"}</TableCell>

@@ -5,19 +5,27 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useBorrowRequests } from "@/hooks/useBorrowRequests";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function BorrowRequestAccepted() {
-  const { requests, loading } = useBorrowRequests("accepted");
+  const { requests, loading, refetch } = useBorrowRequests("accepted");
   const [search, setSearch] = useState("");
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
   const filtered = requests.filter(row => {
-    const userName = row.users?.name ?? "";
-    const unitId = row.equipmentUnits?.unitId ?? "";
-    const modelName = row.equipmentUnits?.equipmentModels?.modelName ?? "";
+    const userName = row.user?.name ?? "";
+    const unitId = row.unit?.unitId ?? "";
+    const modelName = row.unit?.model?.modelName ?? "";
     return [userName, unitId, modelName]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
   });
@@ -62,9 +70,9 @@ export default function BorrowRequestAccepted() {
                     </TableRow>
                   ) : filtered.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell className="font-semibold text-sm">{row.users?.name ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{row.equipmentUnits?.equipmentModels?.modelName ?? "—"}</TableCell>
-                      <TableCell className="text-sm font-mono">{row.equipmentUnits?.unitId ?? "—"}</TableCell>
+                      <TableCell className="font-semibold text-sm">{row.user?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{row.unit?.model?.modelName ?? "—"}</TableCell>
+                      <TableCell className="text-sm font-mono">{row.unit?.unitId ?? "—"}</TableCell>
                       <TableCell className="text-sm">{row.startDate}</TableCell>
                       <TableCell className="text-sm">{row.endDate}</TableCell>
                       <TableCell><StatusBadge status="accepted" /></TableCell>
