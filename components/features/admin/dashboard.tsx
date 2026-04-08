@@ -18,7 +18,7 @@ import { useEquipmentUnitsWithModel } from "@/hooks/useEquipment";
 import { useActivityLog } from "@/hooks/useAdmin";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
-export default function Dashboard() {
+export default function Dashboard({ onNavigate }: { onNavigate?: (section: string) => void }) {
   const { requests: pendingBorrows, loading: loadingPB } = useBorrowRequests("pending");
   const { requests: acceptedBorrows } = useBorrowRequests("accepted");
   const { reservations: pendingReservations, loading: loadingPR } = useRoomReservations("pending");
@@ -53,7 +53,9 @@ export default function Dashboard() {
   ].slice(0, 8);
 
   function timeAgo(dateStr: string) {
-    const diff = Date.now() - new Date(dateStr).getTime();
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return "just now";
     if (minutes < 60) return `${minutes} min ago`;
@@ -61,6 +63,14 @@ export default function Dashboard() {
     if (hours < 24) return `${hours} hr${hours > 1 ? "s" : ""} ago`;
     const days = Math.floor(hours / 24);
     return `${days} day${days > 1 ? "s" : ""} ago`;
+  }
+
+  function formatActionName(action: string): string {
+    // Convert snake_case to Title Case
+    return action
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   const statusConfig: Record<string, { badge: string; icon: typeof IconCheck }> = {
@@ -127,10 +137,10 @@ export default function Dashboard() {
                         <cfg.icon className="size-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">{item.action}</p>
+                        <p className="text-sm font-medium text-foreground">{formatActionName(item.action)}</p>
                         <p className="text-xs text-muted-foreground truncate">{item.detail}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt.toString())}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt)}</p>
                     </div>
                   );
                 })}
@@ -149,7 +159,11 @@ export default function Dashboard() {
                     No pending actions.
                   </div>
                 ) : pendingActions.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 px-5 py-3">
+                  <button
+                    key={i}
+                    onClick={() => onNavigate?.(item.type === "Borrow" ? "borrow-pending" : "room-pending")}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors cursor-pointer w-full text-left"
+                  >
                     <div className={`rounded-lg p-1.5 ${item.type === "Borrow" ? "text-blue-600 bg-blue-50" : "text-violet-600 bg-violet-50"}`}>
                       {item.type === "Borrow" ? <IconBook className="size-3.5" /> : <IconCalendar className="size-3.5" />}
                     </div>
@@ -163,7 +177,7 @@ export default function Dashboard() {
                       </Badge>
                       <p className="text-[10px] text-muted-foreground mt-0.5">{item.submitted}</p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>

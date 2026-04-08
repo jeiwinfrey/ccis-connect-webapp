@@ -321,10 +321,10 @@ function AdminSidebar({
     );
 }
 
-function ContentArea({ active }: { active: ActiveSection }) {
+function ContentArea({ active, setActive }: { active: ActiveSection; setActive: (s: ActiveSection) => void }) {
     switch (active) {
         case "dashboard":
-            return <Dashboard />;
+            return <Dashboard onNavigate={(section) => setActive(section as ActiveSection)} />;
         case "borrow-pending":
             return <BorrowRequestPending />;
         case "borrow-accepted":
@@ -411,7 +411,7 @@ export default function AdminPage() {
 
                     {/* Main content */}
                     <main id="main-content">
-                        <ContentArea active={active} />
+                        <ContentArea active={active} setActive={setActive} />
                     </main>
                 </SidebarInset>
             </SidebarProvider>
