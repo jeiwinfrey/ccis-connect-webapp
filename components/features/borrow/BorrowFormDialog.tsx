@@ -158,8 +158,8 @@ export function BorrowFormDialog({
               <Label htmlFor="borrow-purpose" className="text-sm font-semibold">
                 Purpose / Project <span className="text-destructive">*</span>
               </Label>
-              <span className="text-xs text-muted-foreground">
-                {purpose.length}/500
+              <span className={`text-xs ${purpose.length === 0 ? 'text-muted-foreground' : purpose.length < 10 ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                {purpose.length === 0 ? 'Required' : `${purpose.length} characters`}
               </span>
             </div>
             <Textarea
@@ -172,6 +172,9 @@ export function BorrowFormDialog({
               maxLength={500}
               required
             />
+            {purpose.length > 0 && purpose.length < 10 && (
+              <p className="text-xs text-amber-600">Please provide more details (at least 10 characters recommended)</p>
+            )}
           </div>
         </form>
 

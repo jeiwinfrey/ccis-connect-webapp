@@ -88,6 +88,7 @@ export interface TextAreaFieldProps {
   error?: string;
   rows?: number;
   maxLength?: number;
+  minLength?: number;
   showCounter?: boolean;
 }
 
@@ -100,17 +101,20 @@ export function TextAreaField({
   error,
   rows = 3,
   maxLength,
+  minLength,
   showCounter = true,
 }: TextAreaFieldProps) {
+  const isUnderMin = minLength && value.length > 0 && value.length < minLength;
+  
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-semibold">
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
-        {showCounter && maxLength && (
-          <span className="text-xs text-muted-foreground">
-            {value.length}/{maxLength}
+        {showCounter && (
+          <span className={`text-xs ${value.length === 0 ? 'text-muted-foreground' : isUnderMin ? 'text-amber-600' : 'text-muted-foreground'}`}>
+            {value.length === 0 ? 'Required' : `${value.length} characters`}
           </span>
         )}
       </div>
@@ -121,7 +125,13 @@ export function TextAreaField({
         required={required}
         rows={rows}
         maxLength={maxLength}
+        minLength={minLength}
       />
+      {isUnderMin && (
+        <p className="text-xs text-amber-600">
+          Please provide more details (at least {minLength} characters recommended)
+        </p>
+      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
