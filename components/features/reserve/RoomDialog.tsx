@@ -32,7 +32,6 @@ interface RoomDialogProps {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 0, label: "Sunday" },
   { value: 1, label: "Monday" },
   { value: 2, label: "Tuesday" },
   { value: 3, label: "Wednesday" },
@@ -44,21 +43,38 @@ const DAYS_OF_WEEK = [
 function getNextDateForDay(dayOfWeek: number): string {
   const today = new Date();
   const currentDay = today.getDay();
+  
+  // If selecting today, return today's date
+  if (dayOfWeek === currentDay) {
+    return today.toISOString().split("T")[0];
+  }
+  
+  // Otherwise get next occurrence
   let daysToAdd = dayOfWeek - currentDay;
-  if (daysToAdd <= 0) daysToAdd += 7; // Get next occurrence
+  if (daysToAdd <= 0) daysToAdd += 7;
   const targetDate = new Date(today);
   targetDate.setDate(today.getDate() + daysToAdd);
   return targetDate.toISOString().split("T")[0];
 }
 
-function getAvailableTimeSlots(availability: RoomAvailability[], dayOfWeek: number): number[] {
+function getCurrentTimeInHours(): number {
+  const now = new Date();
+  return now.getHours() + now.getMinutes() / 60;
+}
+
+function getAvailableTimeSlots(availability: RoomAvailability[], dayOfWeek: number, isToday: boolean): number[] {
   const slots: number[] = [];
+  const currentTime = isToday ? getCurrentTimeInHours() : 0;
+  
   for (const slot of availability) {
     if (slot.dayOfWeek !== dayOfWeek) continue;
     // Generate 30-minute slots
     let current = slot.startHour;
     while (current < slot.endHour) {
-      slots.push(current);
+      // Only include slots that haven't passed if it's today
+      if (!isToday || current > currentTime) {
+        slots.push(current);
+      }
       current += 0.5;
     }
   }
@@ -161,7 +177,8 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
 
   const isVacant = room.status === "vacant";
   const currentDay = new Date().getDay();
-  const availableStartTimes = dayOfWeek != null ? getAvailableTimeSlots(availability, dayOfWeek) : [];
+  const isToday = dayOfWeek === currentDay;
+  const availableStartTimes = dayOfWeek != null ? getAvailableTimeSlots(availability, dayOfWeek, isToday) : [];
   const availableEndTimes = dayOfWeek != null && startTime != null ? getAvailableEndTimes(availability, dayOfWeek, startTime) : [];
 
   return (
@@ -214,15 +231,18 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                     <SelectValue placeholder="Select day" />
                   </SelectTrigger>
                   <SelectContent>
-                    {DAYS_OF_WEEK.map(day => (
-                      <SelectItem 
-                        key={day.value} 
-                        value={String(day.value)}
-                        disabled={day.value === currentDay}
-                      >
-                        {day.label} {day.value === currentDay && "(Today - Not Available)"}
-                      </SelectItem>
-                    ))}
+                    {DAYS_OF_WEEK.map(day => {
+                      const isPast = day.value < currentDay;
+                      return (
+                        <SelectItem 
+                          key={day.value} 
+                          value={String(day.value)}
+                          disabled={isPast}
+                        >
+                          {day.label} {day.value === currentDay && "(Today)"} {isPast && "(Past)"}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
