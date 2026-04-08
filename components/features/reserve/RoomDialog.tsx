@@ -31,38 +31,65 @@ interface RoomDialogProps {
   onReservationComplete?: () => void;
 }
 
-function getAvailableStartHours(availability: RoomAvailability[], date: string): number[] {
-  if (!date) return [];
-  const dayOfWeek = new Date(date).getDay();
-  const hours: number[] = [];
+const DAYS_OF_WEEK = [
+  { value: 0, label: "Sunday" },
+  { value: 1, label: "Monday" },
+  { value: 2, label: "Tuesday" },
+  { value: 3, label: "Wednesday" },
+  { value: 4, label: "Thursday" },
+  { value: 5, label: "Friday" },
+  { value: 6, label: "Saturday" },
+];
+
+function getNextDateForDay(dayOfWeek: number): string {
+  const today = new Date();
+  const currentDay = today.getDay();
+  let daysToAdd = dayOfWeek - currentDay;
+  if (daysToAdd <= 0) daysToAdd += 7; // Get next occurrence
+  const targetDate = new Date(today);
+  targetDate.setDate(today.getDate() + daysToAdd);
+  return targetDate.toISOString().split("T")[0];
+}
+
+function getAvailableTimeSlots(availability: RoomAvailability[], dayOfWeek: number): number[] {
+  const slots: number[] = [];
   for (const slot of availability) {
     if (slot.dayOfWeek !== dayOfWeek) continue;
-    for (let h = slot.startHour; h < slot.endHour; h++) {
-      hours.push(h);
+    // Generate 30-minute slots
+    let current = slot.startHour;
+    while (current < slot.endHour) {
+      slots.push(current);
+      current += 0.5;
     }
   }
-  return hours.sort((a, b) => a - b);
+  return slots.sort((a, b) => a - b);
 }
 
-function getAvailableEndHours(availability: RoomAvailability[], startHour: number | null): number[] {
-  if (startHour == null) return [];
-  const slot = availability.find(s => s.startHour <= startHour && s.endHour > startHour);
+function getAvailableEndTimes(availability: RoomAvailability[], dayOfWeek: number, startTime: number | null): number[] {
+  if (startTime == null) return [];
+  const slot = availability.find(s => s.dayOfWeek === dayOfWeek && s.startHour <= startTime && s.endHour > startTime);
   if (!slot) return [];
-  const hours: number[] = [];
-  for (let h = startHour + 1; h <= slot.endHour; h++) {
-    hours.push(h);
+  const times: number[] = [];
+  let current = startTime + 0.5;
+  while (current <= slot.endHour) {
+    times.push(current);
+    current += 0.5;
   }
-  return hours;
+  return times;
 }
 
-function formatHour(hour: number): string {
-  const ampm = hour >= 12 ? "PM" : "AM";
-  const h12 = hour % 12 || 12;
-  return `${h12}:00 ${ampm}`;
+function formatTime(hour: number): string {
+  const h = Math.floor(hour);
+  const m = (hour % 1) * 60;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return m === 0 ? `${h12}:00 ${ampm}` : `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
 }
 
 function toTimeString(hour: number): string {
-  return `${String(hour).padStart(2, "0")}:00`;
+  const h = Math.floor(hour);
+  const m = (hour % 1) * 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomDialogProps) {
@@ -72,16 +99,16 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   const [step, setStep] = useState<"info" | "form" | "confirmed">("info");
 
   // Form state
-  const [date, setDate] = useState("");
-  const [startHour, setStartHour] = useState<number | null>(null);
-  const [endHour, setEndHour] = useState<number | null>(null);
+  const [dayOfWeek, setDayOfWeek] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [endTime, setEndTime] = useState<number | null>(null);
   const [purpose, setPurpose] = useState("");
 
   function resetForm() {
     setStep("info");
-    setDate("");
-    setStartHour(null);
-    setEndHour(null);
+    setDayOfWeek(null);
+    setStartTime(null);
+    setEndTime(null);
     setPurpose("");
   }
 
@@ -90,28 +117,31 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
     onClose();
   }
 
-  function handleDateChange(newDate: string) {
-    setDate(newDate);
-    setStartHour(null);
-    setEndHour(null);
+  function handleDayChange(value: string) {
+    setDayOfWeek(Number(value));
+    setStartTime(null);
+    setEndTime(null);
   }
 
-  function handleStartHourChange(value: string) {
-    setStartHour(Number(value));
-    setEndHour(null);
+  function handleStartTimeChange(value: string) {
+    const time = Number(value);
+    setStartTime(time);
+    setEndTime(time + 0.5); // Auto-select next 30-min slot as default
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!room || !date || startHour == null || endHour == null || !user) return;
+    if (!room || dayOfWeek == null || startTime == null || endTime == null || !user) return;
+
+    const reservationDate = getNextDateForDay(dayOfWeek);
 
     try {
       await mutations.createRoomReservation({
         roomId: room.id,
         userId: user.id,
-        reservationDate: date,
-        startTime: toTimeString(startHour),
-        endTime: toTimeString(endHour),
+        reservationDate,
+        startTime: toTimeString(startTime),
+        endTime: toTimeString(endTime),
         purpose: purpose.trim(),
       });
       setStep("confirmed");
@@ -130,9 +160,9 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   if (!room) return null;
 
   const isVacant = room.status === "vacant";
-  const today = new Date().toISOString().split("T")[0];
-  const availableStartHours = getAvailableStartHours(availability, date);
-  const availableEndHours = getAvailableEndHours(availability, startHour);
+  const currentDay = new Date().getDay();
+  const availableStartTimes = dayOfWeek != null ? getAvailableTimeSlots(availability, dayOfWeek) : [];
+  const availableEndTimes = dayOfWeek != null && startTime != null ? getAvailableEndTimes(availability, dayOfWeek, startTime) : [];
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -173,17 +203,28 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label htmlFor="res-date" className="text-sm font-semibold">
-                  Date <span className="text-destructive">*</span>
+                <Label htmlFor="res-day" className="text-sm font-semibold">
+                  Day <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="res-date"
-                  type="date"
-                  value={date}
-                  min={today}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  required
-                />
+                <Select
+                  value={dayOfWeek != null ? String(dayOfWeek) : ""}
+                  onValueChange={handleDayChange}
+                >
+                  <SelectTrigger id="res-day">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DAYS_OF_WEEK.map(day => (
+                      <SelectItem 
+                        key={day.value} 
+                        value={String(day.value)}
+                        disabled={day.value === currentDay}
+                      >
+                        {day.label} {day.value === currentDay && "(Today - Not Available)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -191,19 +232,19 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                     Start Time <span className="text-destructive">*</span>
                   </Label>
                   <Select
-                    value={startHour != null ? String(startHour) : ""}
-                    onValueChange={handleStartHourChange}
-                    disabled={!date}
+                    value={startTime != null ? String(startTime) : ""}
+                    onValueChange={handleStartTimeChange}
+                    disabled={dayOfWeek == null}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableStartHours.length === 0 ? (
+                      {availableStartTimes.length === 0 ? (
                         <SelectItem value="__none__" disabled>No slots available</SelectItem>
                       ) : (
-                        availableStartHours.map(h => (
-                          <SelectItem key={h} value={String(h)}>{formatHour(h)}</SelectItem>
+                        availableStartTimes.map(time => (
+                          <SelectItem key={time} value={String(time)}>{formatTime(time)}</SelectItem>
                         ))
                       )}
                     </SelectContent>
@@ -214,16 +255,16 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                     End Time <span className="text-destructive">*</span>
                   </Label>
                   <Select
-                    value={endHour != null ? String(endHour) : ""}
-                    onValueChange={(v) => setEndHour(Number(v))}
-                    disabled={startHour == null}
+                    value={endTime != null ? String(endTime) : ""}
+                    onValueChange={(v) => setEndTime(Number(v))}
+                    disabled={startTime == null}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableEndHours.map(h => (
-                        <SelectItem key={h} value={String(h)}>{formatHour(h)}</SelectItem>
+                      {availableEndTimes.map(time => (
+                        <SelectItem key={time} value={String(time)}>{formatTime(time)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -251,7 +292,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={mutations.loading || !date || startHour == null || endHour == null || !purpose.trim()}
+                disabled={mutations.loading || dayOfWeek == null || startTime == null || endTime == null || !purpose.trim()}
               >
                 {mutations.loading ? (
                   <>
