@@ -27,27 +27,31 @@ export function CategoriesSection() {
 
   // Form state
   const [name, setName] = useState("");
-  const [emoji, setEmoji] = useState("");
   const [description, setDescription] = useState("");
-  const [color, setColor] = useState("");
 
   function openAdd() {
     setEditing(null);
-    setName(""); setEmoji(""); setDescription(""); setColor("");
+    setName(""); setDescription("");
     setDialogOpen(true);
   }
 
   function openEdit(cat: EquipmentCategory) {
     setEditing(cat);
-    setName(cat.name); setEmoji(cat.emoji); setDescription(cat.description); setColor(cat.color);
+    setName(cat.name); setDescription(cat.description);
     setDialogOpen(true);
   }
 
-  const categoryFormValid = name.trim() && emoji.trim() && description.trim() && color.trim();
+  const categoryFormValid = name.trim() && description.trim();
 
   async function handleSave() {
     if (!categoryFormValid) return;
-    const data = { name: name.trim(), emoji: emoji.trim(), description: description.trim(), color: color.trim() };
+    // Use default values for emoji and color
+    const data = { 
+      name: name.trim(), 
+      emoji: "📦", // Default emoji
+      description: description.trim(), 
+      color: "#3b82f6" // Default blue color
+    };
     try {
       if (editing) {
         await mutations.updateCategory(editing.id, data);
@@ -108,31 +112,22 @@ export function CategoriesSection() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Emoji</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead>Color</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-sm">
+                      <TableCell colSpan={3} className="text-center py-10 text-muted-foreground text-sm">
                         No categories found.
                       </TableCell>
                     </TableRow>
                   ) : filtered.map((cat) => (
                     <TableRow key={cat.id}>
-                      <TableCell className="text-lg">{cat.emoji}</TableCell>
                       <TableCell className="font-semibold text-sm">{cat.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{cat.description}</TableCell>
-                      <TableCell className="text-sm font-mono">
-                        <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 rounded border border-border shrink-0" style={{ backgroundColor: cat.color }} />
-                          {cat.color}
-                        </div>
-                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{cat.description}</TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <Button size="sm" variant="ghost" className="h-8 px-2.5 text-xs" onClick={() => openEdit(cat)}>
@@ -164,38 +159,8 @@ export function CategoriesSection() {
               <Input placeholder='e.g. "Cameras"' value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Emoji <span className="text-destructive">*</span></Label>
-              <Input placeholder='e.g. "📷"' value={emoji} onChange={(e) => setEmoji(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
               <Label className="text-sm font-semibold">Description <span className="text-destructive">*</span></Label>
               <Input placeholder="Brief description" value={description} onChange={(e) => setDescription(e.target.value)} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">Color <span className="text-destructive">*</span></Label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  value={color.startsWith("#") ? color : "#3b82f6"}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-9 w-12 rounded-md border border-input cursor-pointer bg-transparent p-0.5"
-                  title="Pick a color"
-                />
-                <Input
-                  placeholder='e.g. "#3b82f6"'
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  required
-                  className="flex-1"
-                />
-                {color && (
-                  <div
-                    className="h-9 w-9 rounded-md border border-input shrink-0"
-                    style={{ backgroundColor: color }}
-                    title={`Preview: ${color}`}
-                  />
-                )}
-              </div>
             </div>
           </div>
           <DialogFooter>

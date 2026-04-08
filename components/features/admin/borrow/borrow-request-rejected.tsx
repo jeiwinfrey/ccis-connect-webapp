@@ -4,14 +4,26 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useBorrowRequests } from "@/hooks/useBorrowRequests";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function BorrowRequestRejected() {
-  const { requests, loading } = useBorrowRequests("rejected");
+  const { requests, loading, refetch } = useBorrowRequests("rejected");
   const [search, setSearch] = useState("");
+
+  // Refresh when user returns to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetch]);
 
   const filtered = requests.filter(row => {
     const userName = row.user?.name ?? "";

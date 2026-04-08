@@ -11,20 +11,26 @@ import { useBorrowRequests } from "@/hooks/useBorrowRequests";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function BorrowRequestAccepted() {
-  const { requests, loading, refetch } = useBorrowRequests("accepted");
+  const { requests: acceptedRequests, loading: acceptedLoading, refetch: refetchAccepted } = useBorrowRequests("accepted");
+  const { requests: returnedRequests, loading: returnedLoading, refetch: refetchReturned } = useBorrowRequests("returned");
   const [search, setSearch] = useState("");
+
+  // Combine accepted and returned requests for full history
+  const requests = [...acceptedRequests, ...returnedRequests];
+  const loading = acceptedLoading || returnedLoading;
 
   // Refresh when user returns to the page
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        refetch();
+        refetchAccepted();
+        refetchReturned();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [refetch]);
+  }, [refetchAccepted, refetchReturned]);
 
   const filtered = requests.filter(row => {
     const userName = row.user?.name ?? "";
@@ -79,7 +85,7 @@ export default function BorrowRequestAccepted() {
                       <TableCell className="text-sm font-mono">{row.unit?.unitId ?? "—"}</TableCell>
                       <TableCell className="text-sm">{row.startDate}</TableCell>
                       <TableCell className="text-sm">{row.endDate}</TableCell>
-                      <TableCell><StatusBadge status="accepted" /></TableCell>
+                      <TableCell><StatusBadge status={row.status} /></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

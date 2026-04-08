@@ -4,14 +4,26 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useRoomReservations } from "@/hooks/useRoomReservations";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function RoomReservationRejected() {
-  const { reservations, loading } = useRoomReservations("rejected");
+  const { reservations, loading, refetch } = useRoomReservations("rejected");
   const [search, setSearch] = useState("");
+
+  // Refresh when user returns to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetch]);
 
   const filtered = reservations.filter(row => {
     const userName = row.user?.name ?? "";
