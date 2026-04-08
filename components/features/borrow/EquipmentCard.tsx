@@ -12,6 +12,7 @@ interface EquipmentCardProps {
   emoji: string;
   categoryName: string;
   categoryEmoji: string;
+  onRequestComplete?: () => void;
 }
 
 export function EquipmentCard({
@@ -20,6 +21,7 @@ export function EquipmentCard({
   emoji,
   categoryName,
   categoryEmoji,
+  onRequestComplete,
 }: EquipmentCardProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
@@ -51,10 +53,8 @@ export function EquipmentCard({
           <img
             src={item.image}
             alt={item.model}
-            className="w-full h-full object-cover opacity-0"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            className="w-full h-full object-cover"
           />
-          <span className="absolute text-5xl select-none pointer-events-none">{emoji}</span>
 
           <div className="absolute top-2 left-2">
             {item.available ? (
@@ -110,6 +110,7 @@ export function EquipmentCard({
         open={formOpen}
         onClose={handleFormClose}
         onBack={handleBack}
+        onRequestComplete={onRequestComplete}
       />
     </>
   );

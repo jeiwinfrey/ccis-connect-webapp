@@ -7,6 +7,7 @@ interface EquipmentCarouselProps {
   emoji: string;
   categoryName: string;
   categoryEmoji: string;
+  onRequestComplete?: () => void;
 }
 
 export function EquipmentCarousel({
@@ -15,6 +16,7 @@ export function EquipmentCarousel({
   emoji,
   categoryName,
   categoryEmoji,
+  onRequestComplete,
 }: EquipmentCarouselProps) {
   return (
     <div className="overflow-x-auto pb-2 -mx-1 px-1">
@@ -27,6 +29,7 @@ export function EquipmentCarousel({
             emoji={emoji}
             categoryName={categoryName}
             categoryEmoji={categoryEmoji}
+            onRequestComplete={onRequestComplete}
           />
         ))}
       </div>

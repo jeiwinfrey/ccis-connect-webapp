@@ -49,6 +49,14 @@ export default function BorrowEquipment() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refetchCategories, refetchAccepted, refetchPending, refetchRejected]);
 
+  function handleRequestComplete() {
+    // Refresh all data after a successful borrow request
+    refetchCategories();
+    refetchAccepted();
+    refetchPending();
+    refetchRejected();
+  }
+
   // Map Supabase data → UI types
   const categories = mapCategoriesToUI(rawCategories, acceptedBorrows);
   const pendingRequests = pendingRaw.map(mapBorrowRequestToUI);
@@ -110,6 +118,7 @@ export default function BorrowEquipment() {
                   key={category.id}
                   category={category}
                   value={`category-${category.id}`}
+                  onRequestComplete={handleRequestComplete}
                 />
               ))}
             </Accordion>

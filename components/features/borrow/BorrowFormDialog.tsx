@@ -27,6 +27,7 @@ interface BorrowFormDialogProps {
   open: boolean;
   onClose: () => void;
   onBack: () => void;
+  onRequestComplete?: () => void;
 }
 
 export function BorrowFormDialog({
@@ -37,6 +38,7 @@ export function BorrowFormDialog({
   open,
   onClose,
   onBack,
+  onRequestComplete,
 }: BorrowFormDialogProps) {
   const { user } = useAuth();
   const mutations = useBorrowMutations();
@@ -62,6 +64,12 @@ export function BorrowFormDialog({
 
   function handleClose() {
     resetForm();
+    onClose();
+  }
+
+  function handleDone() {
+    resetForm();
+    onRequestComplete?.();
     onClose();
   }
 
@@ -100,7 +108,7 @@ export function BorrowFormDialog({
                 Your borrow request for <span className="font-semibold">{item.model}</span> (unit {unit.unitId}) has been submitted for review.
               </p>
             </div>
-            <Button className="w-full" onClick={handleClose}>
+            <Button className="w-full" onClick={handleDone}>
               Done
             </Button>
           </div>

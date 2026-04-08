@@ -17,6 +17,7 @@ import {
 import { IconPlus, IconPencil, IconTrash, IconBox, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import {
+  useEquipmentCategories,
   useEquipmentModels,
   useEquipmentUnits,
   useEquipmentMutations,
@@ -26,7 +27,9 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import type { EquipmentUnit } from "@/lib/db/types";
 
 export function UnitsSection() {
-  const { models } = useEquipmentModels();
+  const { categories } = useEquipmentCategories();
+  const [selectedCategory, setSelectedCategory] = useState<string>("__all__");
+  const { models } = useEquipmentModels(selectedCategory === "__all__" ? undefined : selectedCategory);
   const [selectedModel, setSelectedModel] = useState<string>("__all__");
   const [statusFilter, setStatusFilter] = useState<string>("__all__");
   const { units, loading, refetch } = useEquipmentUnits(selectedModel === "__all__" ? undefined : selectedModel, statusFilter === "__all__" ? undefined : statusFilter);
@@ -37,14 +40,19 @@ export function UnitsSection() {
   const [deleteTarget, setDeleteTarget] = useState<EquipmentUnit | null>(null);
 
   // Form state
+  const [formCategoryId, setFormCategoryId] = useState("");
   const [modelId, setModelId] = useState("");
   const [unitId, setUnitId] = useState("");
   const [condition, setCondition] = useState<string>("Good");
   const [status, setStatus] = useState<string>("available");
   const [notes, setNotes] = useState("");
 
+  // Fetch models for the selected category in the form
+  const { models: formModels } = useEquipmentModels(formCategoryId || undefined);
+
   function openAdd() {
     setEditing(null);
+    setFormCategoryId("");
     setModelId(selectedModel === "__all__" ? "" : selectedModel);
     setUnitId(""); setCondition("Good"); setStatus("available"); setNotes("");
     setDialogOpen(true);
@@ -52,6 +60,8 @@ export function UnitsSection() {
 
   function openEdit(unit: EquipmentUnit) {
     setEditing(unit);
+    const model = models.find(m => m.id === unit.modelId);
+    setFormCategoryId(model?.categoryId || "");
     setModelId(unit.modelId);
     setUnitId(unit.unitId);
     setCondition(unit.condition);
@@ -114,6 +124,17 @@ export function UnitsSection() {
         <div className="p-5 space-y-4">
           <div className="flex gap-3 flex-wrap">
             <Input className="max-w-xs" placeholder="Search units..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Select value={selectedCategory} onValueChange={(val) => { setSelectedCategory(val); setSelectedModel("__all__"); }}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All Categories</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={selectedModel} onValueChange={setSelectedModel}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="All Models" />
@@ -196,19 +217,34 @@ export function UnitsSection() {
           </DialogHeader>
           <div className="space-y-4">
             {!editing && (
-              <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Model <span className="text-destructive">*</span></Label>
-                <Select value={modelId} onValueChange={setModelId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {models.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.modelName}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Category <span className="text-destructive">*</span></Label>
+                  <Select value={formCategoryId} onValueChange={(val) => { setFormCategoryId(val); setModelId(""); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">Model <span className="text-destructive">*</span></Label>
+                  <Select value={modelId} onValueChange={setModelId} disabled={!formCategoryId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={formCategoryId ? "Select model" : "Select category first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formModels.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.modelName}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
             <div className="space-y-1.5">
               <Label className="text-sm font-semibold">Unit ID <span className="text-destructive">*</span></Label>
@@ -248,7 +284,7 @@ export function UnitsSection() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={mutations.loading || !unitId.trim() || (!editing && !modelId)}>
+            <Button onClick={handleSave} disabled={mutations.loading || !unitId.trim() || (!editing && (!formCategoryId || !modelId))}>
               {mutations.loading ? "Saving..." : editing ? "Save Changes" : "Add Unit"}
             </Button>
           </DialogFooter>

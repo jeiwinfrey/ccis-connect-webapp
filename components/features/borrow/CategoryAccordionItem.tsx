@@ -9,9 +9,10 @@ import { EquipmentCarousel } from "./EquipmentCarousel";
 interface CategoryAccordionItemProps {
   category: Category;
   value: string;
+  onRequestComplete?: () => void;
 }
 
-export function CategoryAccordionItem({ category, value }: CategoryAccordionItemProps) {
+export function CategoryAccordionItem({ category, value, onRequestComplete }: CategoryAccordionItemProps) {
   const totalAvailable = category.items.filter((i) => i.available).length;
 
   return (
@@ -39,6 +40,7 @@ export function CategoryAccordionItem({ category, value }: CategoryAccordionItem
           emoji={category.emoji}
           categoryName={category.name}
           categoryEmoji={category.emoji}
+          onRequestComplete={onRequestComplete}
         />
       </AccordionContent>
     </AccordionItem>
