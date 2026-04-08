@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { IconCircleCheck, IconLoader2 } from "@tabler/icons-react";
 import { toast } from "sonner";
-import { useRoomReservationMutations } from "@/hooks/useRoomReservations";
+import { useRoomReservationMutations, useRoomReservations } from "@/hooks/useRoomReservations";
 import { useRoomAvailability } from "@/hooks/useRooms";
 import { useAuth } from "@/lib/auth/context";
 import { type Room } from "./types";
@@ -62,7 +62,37 @@ function getCurrentTimeInHours(): number {
   return now.getHours() + now.getMinutes() / 60;
 }
 
-function getAvailableTimeSlots(availability: RoomAvailability[], dayOfWeek: number, isToday: boolean): number[] {
+function timeToDecimal(timeStr: string): number {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h + m / 60;
+}
+
+function isTimeSlotBooked(
+  reservations: any[],
+  targetDate: string,
+  slotStart: number
+): boolean {
+  const slotEnd = slotStart + 0.5;
+  
+  return reservations.some(res => {
+    if (res.reservationDate !== targetDate) return false;
+    if (res.status !== "accepted" && res.status !== "pending") return false;
+    
+    const resStart = timeToDecimal(res.startTime);
+    const resEnd = timeToDecimal(res.endTime);
+    
+    // Check if slot overlaps with reservation
+    return slotStart < resEnd && slotEnd > resStart;
+  });
+}
+
+function getAvailableTimeSlots(
+  availability: RoomAvailability[], 
+  dayOfWeek: number, 
+  isToday: boolean,
+  reservations: any[],
+  targetDate: string
+): number[] {
   const slots: number[] = [];
   const currentTime = isToday ? getCurrentTimeInHours() : 0;
   
@@ -72,7 +102,8 @@ function getAvailableTimeSlots(availability: RoomAvailability[], dayOfWeek: numb
     let current = slot.startHour;
     while (current < slot.endHour) {
       // Only include slots that haven't passed if it's today
-      if (!isToday || current > currentTime) {
+      // AND are not already booked
+      if ((!isToday || current > currentTime) && !isTimeSlotBooked(reservations, targetDate, current)) {
         slots.push(current);
       }
       current += 0.5;
@@ -81,14 +112,34 @@ function getAvailableTimeSlots(availability: RoomAvailability[], dayOfWeek: numb
   return slots.sort((a, b) => a - b);
 }
 
-function getAvailableEndTimes(availability: RoomAvailability[], dayOfWeek: number, startTime: number | null): number[] {
+function getAvailableEndTimes(availability: RoomAvailability[], dayOfWeek: number, startTime: number | null, reservations: any[], targetDate: string): number[] {
   if (startTime == null) return [];
   const slot = availability.find(s => s.dayOfWeek === dayOfWeek && s.startHour <= startTime && s.endHour > startTime);
   if (!slot) return [];
+  
   const times: number[] = [];
   let current = startTime + 0.5;
+  
   while (current <= slot.endHour) {
-    times.push(current);
+    // Check if this end time would overlap with any existing reservation
+    const wouldOverlap = reservations.some(res => {
+      if (res.reservationDate !== targetDate) return false;
+      if (res.status !== "accepted" && res.status !== "pending") return false;
+      
+      const resStart = timeToDecimal(res.startTime);
+      const resEnd = timeToDecimal(res.endTime);
+      
+      // Check if our proposed time range (startTime to current) overlaps
+      return startTime < resEnd && current > resStart;
+    });
+    
+    if (!wouldOverlap) {
+      times.push(current);
+    } else {
+      // Stop at first overlap
+      break;
+    }
+    
     current += 0.5;
   }
   return times;
@@ -120,6 +171,13 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   const [endTime, setEndTime] = useState<number | null>(null);
   const [purpose, setPurpose] = useState("");
 
+  // Fetch existing reservations for this room
+  const targetDate = dayOfWeek != null ? getNextDateForDay(dayOfWeek) : "";
+  const { reservations: existingReservations } = useRoomReservations(undefined, undefined);
+  
+  // Filter reservations for this specific room
+  const roomReservations = existingReservations.filter(r => r.roomId === room?.id);
+
   function resetForm() {
     setStep("info");
     setDayOfWeek(null);
@@ -142,7 +200,14 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   function handleStartTimeChange(value: string) {
     const time = Number(value);
     setStartTime(time);
-    setEndTime(time + 0.5); // Auto-select next 30-min slot as default
+    
+    // Auto-select next available 30-min slot as default
+    const availableEnds = dayOfWeek != null ? getAvailableEndTimes(availability, dayOfWeek, time, roomReservations, targetDate) : [];
+    if (availableEnds.length > 0) {
+      setEndTime(availableEnds[0]);
+    } else {
+      setEndTime(null);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -178,8 +243,8 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   const isVacant = room.status === "vacant";
   const currentDay = new Date().getDay();
   const isToday = dayOfWeek === currentDay;
-  const availableStartTimes = dayOfWeek != null ? getAvailableTimeSlots(availability, dayOfWeek, isToday) : [];
-  const availableEndTimes = dayOfWeek != null && startTime != null ? getAvailableEndTimes(availability, dayOfWeek, startTime) : [];
+  const availableStartTimes = dayOfWeek != null ? getAvailableTimeSlots(availability, dayOfWeek, isToday, roomReservations, targetDate) : [];
+  const availableEndTimes = dayOfWeek != null && startTime != null ? getAvailableEndTimes(availability, dayOfWeek, startTime, roomReservations, targetDate) : [];
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
