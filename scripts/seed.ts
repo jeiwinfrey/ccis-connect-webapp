@@ -8,11 +8,20 @@ async function seed() {
     {
       name: "Student User",
       email: "student@ccis.edu",
-      studentId: "2024-00001",
+      studentId: "23-14000",
       department: "Computer Science",
       role: "student" as const,
-      username: "student",
-      passwordHash: "student", // In production, this should be hashed!
+      username: "23-14000",
+      passwordHash: "23-14000", // In production, this should be hashed!
+    },
+    {
+      name: "Student User 2",
+      email: "student2@ccis.edu",
+      studentId: "23-14001",
+      department: "Information Technology",
+      role: "student" as const,
+      username: "23-14001",
+      passwordHash: "23-14001", // In production, this should be hashed!
     },
     {
       name: "Faculty User",
@@ -20,8 +29,17 @@ async function seed() {
       studentId: null,
       department: "Computer Science",
       role: "faculty" as const,
-      username: "faculty",
-      passwordHash: "faculty", // In production, this should be hashed!
+      username: "fac-01",
+      passwordHash: "fac-01", // In production, this should be hashed!
+    },
+    {
+      name: "Faculty User 2",
+      email: "faculty2@ccis.edu",
+      studentId: null,
+      department: "Information Technology",
+      role: "faculty" as const,
+      username: "fac-02",
+      passwordHash: "fac-02", // In production, this should be hashed!
     },
     {
       name: "Admin User",
@@ -43,16 +61,16 @@ async function seed() {
   const sampleRooms = [
     {
       roomNumber: "CCIS-301",
-      name: "Conference Room A",
-      floor: "3rd Floor",
-      type: "Conference",
+      name: "CCIS-301",
+      floor: "1st Floor",
+      type: "Lecture",
       capacity: "20",
     },
     {
       roomNumber: "CCIS-302",
-      name: "Study Room B",
-      floor: "3rd Floor",
-      type: "Study Room",
+      name: "CCIS-302",
+      floor: "2nd Floor",
+      type: "Lab Room",
       capacity: "8",
     },
   ];

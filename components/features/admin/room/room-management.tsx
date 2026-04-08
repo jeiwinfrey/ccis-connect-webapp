@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -35,11 +36,11 @@ export default function RoomManagement() {
   const [scheduleRoom, setScheduleRoom] = useState<Room | null>(null);
 
   // Form state
-  const [roomNumber, setRoomNumber] = useState("");
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [capacity, setCapacity] = useState("");
   const [floor, setFloor] = useState("");
+  const [notes, setNotes] = useState("");
 
   // Availability schedule state
   const [slots, setSlots] = useState<TimeSlot[]>([]);
@@ -63,22 +64,22 @@ export default function RoomManagement() {
 
   function openAdd() {
     setEditing(null);
-    setRoomNumber(""); setName(""); setType(""); setCapacity(""); setFloor("");
+    setName(""); setType(""); setCapacity(""); setFloor(""); setNotes("");
     setDialogOpen(true);
   }
 
   function openEdit(room: Room) {
     setEditing(room);
-    setRoomNumber(room.roomNumber);
     setName(room.name);
     setType(room.type);
     setCapacity(room.capacity);
     setFloor(room.floor);
+    setNotes(room.notes || "");
     setDialogOpen(true);
   }
 
   async function handleSave() {
-    const data = { roomNumber: roomNumber, name, type, capacity, floor };
+    const data = { roomNumber: name.trim(), name: name.trim(), type, capacity, floor, notes: notes.trim() };
     try {
       if (editing) {
         await mutations.updateRoom(editing.id, data);
@@ -268,35 +269,12 @@ export default function RoomManagement() {
           </DialogHeader>
 
           <div className="space-y-3 pt-1">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Room No. <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  placeholder="e.g. R101"
-                  value={roomNumber}
-                  onChange={(e) => setRoomNumber(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Floor <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  placeholder="e.g. 3rd Floor"
-                  value={floor}
-                  onChange={(e) => setFloor(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Name <span className="text-destructive">*</span>
+                Name (Room Number) <span className="text-destructive">*</span>
               </Label>
               <Input
-                placeholder="e.g. Seminar Room B"
+                placeholder="e.g. CCIS-301"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -305,24 +283,55 @@ export default function RoomManagement() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Type <span className="text-destructive">*</span>
+                  Floor <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  placeholder="e.g. Computer Lab"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                />
+                <Select value={floor} onValueChange={setFloor}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select floor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1st Floor">1st Floor</SelectItem>
+                    <SelectItem value="2nd Floor">2nd Floor</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Capacity <span className="text-destructive">*</span>
+                  Type <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  placeholder="e.g. 30 pax"
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
-                />
+                <Select value={type} onValueChange={setType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Lecture">Lecture</SelectItem>
+                    <SelectItem value="Hyflex">Hyflex</SelectItem>
+                    <SelectItem value="Lab Room">Lab Room</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Capacity <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="e.g. 30"
+                value={capacity}
+                onChange={(e) => setCapacity(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Notes
+              </Label>
+              <Input
+                placeholder="Optional notes about the room"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
             </div>
           </div>
 
@@ -334,7 +343,6 @@ export default function RoomManagement() {
               onClick={handleSave}
               disabled={
                 mutations.loading ||
-                !roomNumber.trim() ||
                 !name.trim() ||
                 !type.trim() ||
                 !capacity.trim() ||

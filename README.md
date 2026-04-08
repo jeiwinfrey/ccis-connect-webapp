@@ -109,9 +109,9 @@ npm run db:push
 
 This will create all the necessary tables in your database.
 
-### 5. Seed Test Data (Optional)
+### 5. Seed Test Data
 
-Create test users for development:
+Seed the database with test users, sample rooms, and equipment:
 
 **macOS/Linux:**
 ```bash
@@ -128,10 +128,23 @@ $env:DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/ccis_connec
 set DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/ccis_connect && npx tsx scripts/seed.ts
 ```
 
-This creates 3 test accounts:
-- **Student**: username: `student`, password: `student`
-- **Faculty**: username: `faculty`, password: `faculty`
+This creates:
+
+**Test Users:**
+- **Student 1**: username: `23-14000`, password: `23-14000`
+- **Student 2**: username: `23-14001`, password: `23-14001`
+- **Faculty 1**: username: `fac-01`, password: `fac-01`
+- **Faculty 2**: username: `fac-02`, password: `fac-02`
 - **Admin**: username: `admin`, password: `admin`
+
+**Sample Rooms:**
+- CCIS-301 (1st Floor, Lecture, capacity 20)
+- CCIS-302 (2nd Floor, Lab Room, capacity 8)
+- Both with availability Monday-Friday, 8 AM - 5 PM
+
+**Sample Equipment:**
+- Cameras category with Sony A7 IV model (1 unit: CAM-A7IV-01)
+- Laptops category with MacBook Pro M3 model (1 unit: MBP-M3-01)
 
 ### 6. Run Development Server
 

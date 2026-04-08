@@ -43,6 +43,7 @@ export const rooms = pgTable("rooms", {
   type: text("type").notNull(),
   capacity: text("capacity").notNull(),
   floor: text("floor").notNull(),
+  notes: text("notes").default(""),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
