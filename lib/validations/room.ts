@@ -7,6 +7,7 @@ export const roomSchema = z.object({
   type: z.string().min(1, "Type is required").max(50),
   capacity: z.string().min(1, "Capacity is required").max(50),
   floor: z.string().min(1, "Floor is required").max(20),
+  notes: z.string().max(500).optional().default(""),
 });
 
 export const roomUpdateSchema = roomSchema.partial();
