@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   IconBook,
@@ -25,6 +26,8 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
   const { units, loading: loadingUnits } = useEquipmentUnitsWithModel();
   const { logs, loading: loadingLogs } = useActivityLog(10);
 
+  const [attentionFilter, setAttentionFilter] = useState<"all" | "pending" | "on-loan">("all");
+
   const loading = loadingPB || loadingPR || loadingUnits || loadingLogs;
 
   const availableUnits = units.filter(u => u.status === "available").length;
@@ -36,21 +39,41 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
     { label: "Equipment Units", value: units.length, icon: IconPackage, color: "text-emerald-600 bg-emerald-50", trend: `${availableUnits} available` },
   ];
 
-  // Combine pending borrows and reservations for "Needs Attention"
-  const pendingActions = [
+  // Combine pending borrows, reservations, and on-loan items for "Needs Attention"
+  const allAttentionItems = [
     ...pendingBorrows.map(b => ({
-      type: "Borrow" as const,
+      type: "Pending Borrow" as const,
       requestor: b.user?.name ?? "—",
       item: b.unit?.model?.modelName ?? "—",
       submitted: new Date(b.createdAt).toLocaleDateString(),
+      status: "pending" as const,
+      link: "borrow-pending" as const,
     })),
     ...pendingReservations.map(r => ({
-      type: "Room" as const,
+      type: "Pending Room" as const,
       requestor: r.user?.name ?? "—",
       item: r.room?.name ?? "—",
       submitted: new Date(r.createdAt).toLocaleDateString(),
+      status: "pending" as const,
+      link: "room-pending" as const,
     })),
-  ].slice(0, 8);
+    ...acceptedBorrows.map(b => ({
+      type: "On Loan" as const,
+      requestor: b.user?.name ?? "—",
+      item: b.unit?.model?.modelName ?? "—",
+      submitted: `Due: ${b.endDate}`,
+      status: "on-loan" as const,
+      link: "borrow-accepted" as const,
+    })),
+  ];
+
+  const filteredAttentionItems = allAttentionItems
+    .filter(item => {
+      if (attentionFilter === "pending") return item.status === "pending";
+      if (attentionFilter === "on-loan") return item.status === "on-loan";
+      return true;
+    })
+    .slice(0, 8);
 
   function timeAgo(dateStr: string) {
     const date = new Date(dateStr);
@@ -140,7 +163,7 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
                         <p className="text-sm font-medium text-foreground">{formatActionName(item.action)}</p>
                         <p className="text-xs text-muted-foreground truncate">{item.detail}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt)}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt.toString())}</p>
                     </div>
                   );
                 })}
@@ -151,29 +174,73 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
             <div className="lg:col-span-2 rounded-xl border border-border bg-card">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                 <p className="font-semibold text-sm">Needs Attention</p>
-                <Badge variant="destructive" className="rounded-full px-2 py-0.5 text-xs">{pendingActions.length}</Badge>
+                <Badge variant="destructive" className="rounded-full px-2 py-0.5 text-xs">{filteredAttentionItems.length}</Badge>
+              </div>
+              <div className="px-5 py-3 border-b border-border">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setAttentionFilter("all")}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      attentionFilter === "all"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setAttentionFilter("pending")}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      attentionFilter === "pending"
+                        ? "bg-amber-500 text-white"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    onClick={() => setAttentionFilter("on-loan")}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      attentionFilter === "on-loan"
+                        ? "bg-blue-500 text-white"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    On Loan
+                  </button>
+                </div>
               </div>
               <div className="divide-y divide-border">
-                {pendingActions.length === 0 ? (
+                {filteredAttentionItems.length === 0 ? (
                   <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-                    No pending actions.
+                    No items to show.
                   </div>
-                ) : pendingActions.map((item, i) => (
+                ) : filteredAttentionItems.map((item, i) => (
                   <button
                     key={i}
-                    onClick={() => onNavigate?.(item.type === "Borrow" ? "borrow-pending" : "room-pending")}
+                    onClick={() => onNavigate?.(item.link)}
                     className="flex items-center gap-3 px-5 py-3 hover:bg-muted/50 transition-colors cursor-pointer w-full text-left"
                   >
-                    <div className={`rounded-lg p-1.5 ${item.type === "Borrow" ? "text-blue-600 bg-blue-50" : "text-violet-600 bg-violet-50"}`}>
-                      {item.type === "Borrow" ? <IconBook className="size-3.5" /> : <IconCalendar className="size-3.5" />}
+                    <div className={`rounded-lg p-1.5 ${
+                      item.type === "Pending Borrow" ? "text-blue-600 bg-blue-50" : 
+                      item.type === "Pending Room" ? "text-violet-600 bg-violet-50" :
+                      "text-emerald-600 bg-emerald-50"
+                    }`}>
+                      {item.type === "On Loan" ? <IconPackage className="size-3.5" /> :
+                       item.type === "Pending Borrow" ? <IconBook className="size-3.5" /> : 
+                       <IconCalendar className="size-3.5" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">{item.requestor}</p>
                       <p className="text-xs text-muted-foreground truncate">{item.item}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 text-[10px]">
-                        Pending
+                      <Badge variant="outline" className={`text-[10px] ${
+                        item.status === "pending" 
+                          ? "text-amber-600 border-amber-300 bg-amber-50"
+                          : "text-blue-600 border-blue-300 bg-blue-50"
+                      }`}>
+                        {item.status === "pending" ? "Pending" : "On Loan"}
                       </Badge>
                       <p className="text-[10px] text-muted-foreground mt-0.5">{item.submitted}</p>
                     </div>
