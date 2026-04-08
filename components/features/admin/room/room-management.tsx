@@ -62,6 +62,21 @@ export default function RoomManagement() {
     }
   }, [availability, scheduleRoom]);
 
+  // Auto-refresh when user returns to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+        if (scheduleRoom) {
+          refetchAvailability();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetch, refetchAvailability, scheduleRoom]);
+
   function openAdd() {
     setEditing(null);
     setName(""); setType(""); setCapacity(""); setFloor(""); setNotes("");
@@ -79,7 +94,14 @@ export default function RoomManagement() {
   }
 
   async function handleSave() {
-    const data = { roomNumber: name.trim(), name: name.trim(), type, capacity, floor, notes: notes.trim() };
+    const data = { 
+      roomNumber: name.trim(), 
+      name: name.trim(), 
+      type, 
+      capacity, 
+      floor, 
+      notes: notes ? notes.trim() : "" 
+    };
     try {
       if (editing) {
         await mutations.updateRoom(editing.id, data);
@@ -317,7 +339,7 @@ export default function RoomManagement() {
                 Capacity <span className="text-destructive">*</span>
               </Label>
               <Input
-                placeholder="e.g. 30"
+                placeholder="e.g. 100C"
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
               />
@@ -328,7 +350,7 @@ export default function RoomManagement() {
                 Notes
               </Label>
               <Input
-                placeholder="Optional notes about the room"
+                placeholder="e.g. 1 whiteboard and chairs"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />

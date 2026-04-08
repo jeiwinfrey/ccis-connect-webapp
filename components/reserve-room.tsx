@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { IconLoader2 } from "@tabler/icons-react";
@@ -15,10 +15,23 @@ export default function ReserveRoom() {
 
   // Fetch rooms and active reservations from Supabase
   const { rooms: rawRooms, loading: roomsLoading, refetch: refetchRooms } = useRooms();
-  const { reservations: activeReservations, loading: resLoading } =
+  const { reservations: activeReservations, loading: resLoading, refetch: refetchReservations } =
     useRoomReservations("accepted");
 
   const loading = roomsLoading || resLoading;
+
+  // Auto-refresh when user returns to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetchRooms();
+        refetchReservations();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refetchRooms, refetchReservations]);
 
   // Map to UI rooms with occupancy status
   const allRooms = mapRoomsToUI(rawRooms, activeReservations);
@@ -29,6 +42,7 @@ export default function ReserveRoom() {
 
   function handleReservationComplete() {
     refetchRooms();
+    refetchReservations();
     setSelectedRoom(null);
   }
 
