@@ -129,7 +129,9 @@ export function BorrowFormDialog({
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="borrow-date" className="text-sm font-semibold">Borrow Date</Label>
+              <Label htmlFor="borrow-date" className="text-sm font-semibold">
+                Borrow Date <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="borrow-date"
                 type="date"
@@ -139,7 +141,9 @@ export function BorrowFormDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="return-date" className="text-sm font-semibold">Return Date</Label>
+              <Label htmlFor="return-date" className="text-sm font-semibold">
+                Return Date <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="return-date"
                 type="date"
@@ -150,7 +154,14 @@ export function BorrowFormDialog({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="borrow-purpose" className="text-sm font-semibold">Purpose / Project</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="borrow-purpose" className="text-sm font-semibold">
+                Purpose / Project <span className="text-destructive">*</span>
+              </Label>
+              <span className="text-xs text-muted-foreground">
+                {purpose.length}/500
+              </span>
+            </div>
             <Textarea
               id="borrow-purpose"
               placeholder="Briefly describe what you'll use this equipment for..."
@@ -158,6 +169,7 @@ export function BorrowFormDialog({
               className="resize-none"
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
+              maxLength={500}
               required
             />
           </div>

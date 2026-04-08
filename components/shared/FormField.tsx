@@ -40,6 +40,7 @@ export interface TextFieldProps {
   error?: string;
   type?: "text" | "email" | "password" | "url";
   maxLength?: number;
+  showCounter?: boolean;
 }
 
 export function TextField({
@@ -51,9 +52,20 @@ export function TextField({
   error,
   type = "text",
   maxLength,
+  showCounter = false,
 }: TextFieldProps) {
   return (
-    <FormField label={label} required={required} error={error}>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-semibold">
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+        {showCounter && maxLength && (
+          <span className="text-xs text-muted-foreground">
+            {value.length}/{maxLength}
+          </span>
+        )}
+      </div>
       <Input
         type={type}
         placeholder={placeholder}
@@ -62,7 +74,8 @@ export function TextField({
         required={required}
         maxLength={maxLength}
       />
-    </FormField>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
   );
 }
 
@@ -75,6 +88,7 @@ export interface TextAreaFieldProps {
   error?: string;
   rows?: number;
   maxLength?: number;
+  showCounter?: boolean;
 }
 
 export function TextAreaField({
@@ -86,9 +100,20 @@ export function TextAreaField({
   error,
   rows = 3,
   maxLength,
+  showCounter = true,
 }: TextAreaFieldProps) {
   return (
-    <FormField label={label} required={required} error={error}>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-semibold">
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+        {showCounter && maxLength && (
+          <span className="text-xs text-muted-foreground">
+            {value.length}/{maxLength}
+          </span>
+        )}
+      </div>
       <Textarea
         placeholder={placeholder}
         value={value}
@@ -97,7 +122,8 @@ export function TextAreaField({
         rows={rows}
         maxLength={maxLength}
       />
-    </FormField>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
   );
 }
 

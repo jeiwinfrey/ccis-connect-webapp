@@ -356,9 +356,14 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="res-purpose" className="text-sm font-semibold">
-                  Purpose <span className="text-destructive">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="res-purpose" className="text-sm font-semibold">
+                    Purpose <span className="text-destructive">*</span>
+                  </Label>
+                  <span className="text-xs text-muted-foreground">
+                    {purpose.length}/500
+                  </span>
+                </div>
                 <Textarea
                   id="res-purpose"
                   placeholder="Briefly describe the purpose of your reservation..."
@@ -366,6 +371,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                   className="resize-none"
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
+                  maxLength={500}
                   required
                 />
               </div>
