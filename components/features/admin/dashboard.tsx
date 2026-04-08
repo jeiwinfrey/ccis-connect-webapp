@@ -75,10 +75,14 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
     })
     .slice(0, 8);
 
-  function timeAgo(dateStr: string) {
-    const date = new Date(dateStr);
+  function timeAgo(dateStr: string | Date) {
+    const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
     const now = new Date();
     const diff = now.getTime() - date.getTime();
+    
+    // If diff is negative or very small, it's likely a timezone issue or just created
+    if (diff < 0 || diff < 5000) return "just now";
+    
     const minutes = Math.floor(diff / 60000);
     if (minutes < 1) return "just now";
     if (minutes < 60) return `${minutes} min ago`;
@@ -163,7 +167,7 @@ export default function Dashboard({ onNavigate }: { onNavigate?: (section: strin
                         <p className="text-sm font-medium text-foreground">{formatActionName(item.action)}</p>
                         <p className="text-xs text-muted-foreground truncate">{item.detail}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt.toString())}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">{timeAgo(item.createdAt)}</p>
                     </div>
                   );
                 })}
