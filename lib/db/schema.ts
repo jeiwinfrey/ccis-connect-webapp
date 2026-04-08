@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, integer, date, time } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, integer, date, time, real } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // Equipment Categories
@@ -52,8 +52,8 @@ export const roomAvailability = pgTable("room_availability", {
   id: uuid("id").primaryKey().defaultRandom(),
   roomId: uuid("room_id").notNull().references(() => rooms.id, { onDelete: "cascade" }),
   dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday ... 6=Saturday
-  startHour: integer("start_hour").notNull(),
-  endHour: integer("end_hour").notNull(),
+  startHour: real("start_hour").notNull(), // Supports decimal hours (e.g., 7.5 for 7:30 AM)
+  endHour: real("end_hour").notNull(), // Supports decimal hours (e.g., 8.0 for 8:00 AM)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

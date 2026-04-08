@@ -14,8 +14,8 @@ export const roomUpdateSchema = roomSchema.partial();
 // Room Availability Validation
 export const roomAvailabilitySchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
-  startHour: z.number().int().min(0).max(23),
-  endHour: z.number().int().min(1).max(24),
+  startHour: z.number().min(0).max(24),
+  endHour: z.number().min(0).max(24),
 }).refine((data) => data.startHour < data.endHour, {
   message: "Start hour must be before end hour",
 });
