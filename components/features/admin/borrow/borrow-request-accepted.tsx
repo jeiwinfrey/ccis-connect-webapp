@@ -14,12 +14,16 @@ export default function BorrowRequestAccepted() {
   const { requests, loading, refetch } = useBorrowRequests("accepted");
   const [search, setSearch] = useState("");
 
-  // Auto-refresh every 30 seconds
+  // Refresh when user returns to the page
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 30000);
-    return () => clearInterval(interval);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refetch]);
 
   const filtered = requests.filter(row => {

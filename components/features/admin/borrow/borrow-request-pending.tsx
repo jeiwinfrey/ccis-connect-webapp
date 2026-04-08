@@ -25,12 +25,16 @@ export default function BorrowRequestPending() {
   const [rejectTarget, setRejectTarget] = useState<BorrowRequestWithDetails | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
 
-  // Auto-refresh every 30 seconds to stay in sync with user actions
+  // Refresh when user returns to the page
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 30000);
-    return () => clearInterval(interval);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refetch]);
 
   const filtered = requests.filter(row => {

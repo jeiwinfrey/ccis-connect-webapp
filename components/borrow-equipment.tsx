@@ -33,16 +33,20 @@ export default function BorrowEquipment() {
   const { requests: rejectedRaw, loading: rejectedLoading, refetch: refetchRejected } =
     useBorrowRequests("rejected", user?.id);
 
-  // Auto-refresh data every 30 seconds to keep user and admin in sync
+  // Refresh data when user returns to the page (Page Visibility API)
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetchCategories();
-      refetchAccepted();
-      refetchPending();
-      refetchRejected();
-    }, 30000); // 30 seconds
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // User returned to the page, refresh data
+        refetchCategories();
+        refetchAccepted();
+        refetchPending();
+        refetchRejected();
+      }
+    };
 
-    return () => clearInterval(interval);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refetchCategories, refetchAccepted, refetchPending, refetchRejected]);
 
   // Map Supabase data → UI types
