@@ -296,7 +296,7 @@ export default function RoomManagement() {
                 Name (Room Number) <span className="text-destructive">*</span>
               </Label>
               <Input
-                placeholder="e.g. CCIS-301"
+                placeholder="e.g. 100C"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -339,7 +339,7 @@ export default function RoomManagement() {
                 Capacity <span className="text-destructive">*</span>
               </Label>
               <Input
-                placeholder="e.g. 100C"
+                placeholder="e.g. 30"
                 value={capacity}
                 onChange={(e) => setCapacity(e.target.value)}
               />
