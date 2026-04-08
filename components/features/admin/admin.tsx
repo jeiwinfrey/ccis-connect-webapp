@@ -33,7 +33,8 @@ export default function Admin() {
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newDepartment, setNewDepartment] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = users.filter(row =>
@@ -42,17 +43,20 @@ export default function Admin() {
   );
 
   async function handleAdd() {
-    if (!newName.trim() || !newEmail.trim()) return;
+    if (!newName.trim() || !newEmail.trim() || !newUsername.trim() || !newPassword.trim()) return;
     try {
       await mutations.createUser({
         name: newName.trim(),
         email: newEmail.trim(),
+        username: newUsername.trim(),
+        passwordHash: newPassword.trim(), // In production, this should be hashed on the server
         role: "admin",
-        department: newDepartment.trim() || "CCIS",
+        department: "Administration",
       });
       setNewName("");
       setNewEmail("");
-      setNewDepartment("");
+      setNewUsername("");
+      setNewPassword("");
       setAddOpen(false);
       refetch();
       toast.success("Administrator added");
@@ -169,37 +173,62 @@ export default function Admin() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="admin-name" className="text-sm font-semibold">Full Name</Label>
+              <Label htmlFor="admin-name" className="text-sm font-semibold">
+                Full Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="admin-name"
                 placeholder="e.g. Juan dela Cruz"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
+                required
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="admin-email" className="text-sm font-semibold">Email Address</Label>
+              <Label htmlFor="admin-email" className="text-sm font-semibold">
+                Email Address <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="admin-email"
                 type="email"
-                placeholder="e.g. juan@mmsu.edu.ph"
+                placeholder="e.g. juan@ccis.edu"
                 value={newEmail}
                 onChange={e => setNewEmail(e.target.value)}
+                required
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="admin-dept" className="text-sm font-semibold">Department</Label>
+              <Label htmlFor="admin-username" className="text-sm font-semibold">
+                Username <span className="text-destructive">*</span>
+              </Label>
               <Input
-                id="admin-dept"
-                placeholder="e.g. CCIS"
-                value={newDepartment}
-                onChange={e => setNewDepartment(e.target.value)}
+                id="admin-username"
+                placeholder="e.g. admin2"
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="admin-password" className="text-sm font-semibold">
+                Password <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="admin-password"
+                type="password"
+                placeholder="Enter password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                required
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button onClick={handleAdd} disabled={mutations.loading}>
+            <Button 
+              onClick={handleAdd} 
+              disabled={mutations.loading || !newName.trim() || !newEmail.trim() || !newUsername.trim() || !newPassword.trim()}
+            >
               {mutations.loading ? "Adding..." : "Add Admin"}
             </Button>
           </DialogFooter>
