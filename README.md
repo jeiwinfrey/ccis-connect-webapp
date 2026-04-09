@@ -5,15 +5,15 @@ Equipment borrowing and room reservation system for CCIS.
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React 19, TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
+- **Database**: PostgreSQL (hosted on Railway) with Drizzle ORM
 - **UI**: Tailwind CSS, shadcn/ui
 - **Authentication**: Session-based with cookies
 
 ## Prerequisites
 
-- Node.js 18+ 
-- PostgreSQL 15+
+- Node.js 18+
 - npm or yarn
+- Access to the shared Railway PostgreSQL database (ask a teammate for the `.env.local` file)
 
 ## Getting Started
 
@@ -23,142 +23,65 @@ Equipment borrowing and room reservation system for CCIS.
 npm install
 ```
 
-### 2. Set Up PostgreSQL Database
+### 2. Configure Environment Variables
 
-#### Option A: Install PostgreSQL Locally
-
-**macOS:**
-```bash
-# Install PostgreSQL
-brew install postgresql@15
-
-# Start PostgreSQL service
-brew services start postgresql@15
-
-# Create database
-createdb ccis_connect
-```
-
-**Windows:**
-```powershell
-# Download and install PostgreSQL from:
-# https://www.postgresql.org/download/windows/
-
-# After installation, PostgreSQL should start automatically
-# Open Command Prompt or PowerShell and create database:
-createdb -U postgres ccis_connect
-
-# Or use pgAdmin (GUI tool installed with PostgreSQL)
-```
-
-**Linux (Ubuntu/Debian):**
-```bash
-# Install PostgreSQL
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-
-# Start PostgreSQL service
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-
-# Create database
-sudo -u postgres createdb ccis_connect
-```
-
-#### Option B: Use Existing PostgreSQL Server
-
-If you already have PostgreSQL running, just create a new database:
-
-**macOS/Linux:**
-```bash
-createdb ccis_connect
-```
-
-**Windows:**
-```powershell
-createdb -U postgres ccis_connect
-```
-
-### 3. Configure Environment Variables
-
-Create a `.env.local` file in the root directory:
+Create a `.env.local` file in the root directory and add the Railway database URL:
 
 ```env
-# Database connection string
-DATABASE_URL=postgresql://username@localhost:5432/ccis_connect
-
-# Node environment
-NODE_ENV=development
+DATABASE_URL=postgresql://postgres:<password>@<public-host>:<port>/railway
 ```
 
-**Connection String Examples:**
+> Ask a teammate for the actual `.env.local` values. Do NOT commit this file to Git.
 
-- **macOS/Linux**: `postgresql://yourusername@localhost:5432/ccis_connect`
-- **Windows**: `postgresql://postgres:yourpassword@localhost:5432/ccis_connect`
+### 3. Run Migrations
 
-Replace:
-- `yourusername` with your PostgreSQL username (usually your system username on macOS/Linux)
-- `yourpassword` with the password you set during PostgreSQL installation (Windows)
-- `postgres` is the default superuser on Windows
-
-### 4. Push Database Schema
+Apply the database schema to the Railway PostgreSQL instance:
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
-This will create all the necessary tables in your database.
+### 4. Seed Test Data
 
-### 5. Seed Test Data
+Populate the database with test users, rooms, and equipment:
 
-Seed the database with test users, sample rooms, and equipment:
-
-**macOS/Linux:**
 ```bash
-DATABASE_URL="postgresql://username@localhost:5432/ccis_connect" npx tsx scripts/seed.ts
-```
-
-**Windows (PowerShell):**
-```powershell
-$env:DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/ccis_connect"; npx tsx scripts/seed.ts
-```
-
-**Windows (Command Prompt):**
-```cmd
-set DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/ccis_connect && npx tsx scripts/seed.ts
+npm run db:seed
 ```
 
 This creates:
 
 **Test Users:**
-- **Student 1**: username: `23-14000`, password: `23-14000`
-- **Student 2**: username: `23-14001`, password: `23-14001`
-- **Faculty 1**: username: `fac-01`, password: `fac-01`
-- **Faculty 2**: username: `fac-02`, password: `fac-02`
-- **Admin**: username: `admin`, password: `admin`
+| Role | Username | Password |
+|------|----------|----------|
+| Student | `23-14000` | `23-14000` |
+| Student | `23-14001` | `23-14001` |
+| Faculty | `fac-01` | `fac-01` |
+| Faculty | `fac-02` | `fac-02` |
+| Admin | `admin` | `admin` |
 
 **Sample Rooms:**
 - CCIS-301 (1st Floor, Lecture, capacity 20)
 - CCIS-302 (2nd Floor, Lab Room, capacity 8)
-- Both with availability Monday-Friday, 8 AM - 5 PM
+- Both available Monday–Friday, 8 AM – 5 PM
 
 **Sample Equipment:**
-- Cameras category with Sony A7 IV model (1 unit: CAM-A7IV-01)
-- Laptops category with MacBook Pro M3 model (1 unit: MBP-M3-01)
+- Cameras category → Sony A7 IV (unit: `CAM-A7IV-01`)
+- Laptops category → MacBook Pro M3 (unit: `MBP-M3-01`)
 
-### 6. Run Development Server
+### 5. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the application.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+---
 
 ## Database Management
 
-### Drizzle Studio (Database GUI)
-
-Access your database with a visual interface:
+### Drizzle Studio (Visual DB GUI)
 
 ```bash
 npm run db:studio
@@ -166,21 +89,48 @@ npm run db:studio
 
 Then open [https://local.drizzle.studio](https://local.drizzle.studio) in your browser.
 
-### Database Scripts
+### Available Database Scripts
 
 ```bash
-# Push schema changes to database (development)
+# Run existing migration files (use this for production/shared DB)
+npm run db:migrate
+
+# Push schema directly to DB (use only for local experimentation)
 npm run db:push
 
-# Generate migrations from schema changes
+# Generate new migration files from schema changes
 npm run db:generate
 
-# Run migrations (production)
-npm run db:migrate
+# Seed the database with test data
+npm run db:seed
 
 # Open Drizzle Studio
 npm run db:studio
 ```
+
+> **migrate vs push:**
+> - Use `db:migrate` when working with the shared Railway database — it runs versioned SQL files safely.
+> - Use `db:push` only for quick local prototyping — it skips migration files and can cause data loss.
+
+---
+
+## Railway PostgreSQL Setup (For Reference)
+
+The project uses a shared PostgreSQL database hosted on [Railway](https://railway.app).
+
+### Connecting Locally
+
+The internal Railway host (`postgres.railway.internal`) only works inside Railway's servers. To connect from your local machine:
+
+1. Go to Railway → PostgreSQL service → **Settings** → **Networking**
+2. Click **"Generate Domain"** to get a public host and port
+3. Use that public host in your `DATABASE_URL`
+
+### Sharing Credentials with Teammates
+
+Share the `.env.local` file privately (via chat or a shared doc). Never push it to GitHub — it's already listed in `.gitignore`.
+
+---
 
 ## Project Structure
 
@@ -192,6 +142,7 @@ npm run db:studio
 │   ├── features/         # Feature-specific components
 │   ├── shared/           # Shared components
 │   └── ui/               # UI components (shadcn)
+├── drizzle/               # Migration SQL files
 ├── lib/
 │   ├── db/               # Database (Drizzle ORM)
 │   │   ├── schema.ts    # Database schema
@@ -200,21 +151,27 @@ npm run db:studio
 │   └── auth/             # Authentication
 ├── hooks/                # React hooks
 └── scripts/              # Utility scripts
+    ├── seed.ts           # Main seed script
+    └── seed-activities.ts # Activity log seed script
 ```
+
+---
 
 ## Database Schema
 
-### Tables
+| Table | Description |
+|-------|-------------|
+| `users` | User accounts (students, faculty, admin) |
+| `equipment_categories` | Equipment categories (Cameras, Laptops, etc.) |
+| `equipment_models` | Equipment models (Sony A7 IV, etc.) |
+| `equipment_units` | Individual equipment units |
+| `rooms` | Available rooms |
+| `room_availability` | Room availability schedules |
+| `room_reservations` | Room reservation requests |
+| `borrow_requests` | Equipment borrow requests |
+| `activity_log` | System activity logs |
 
-- **users** - User accounts (students, faculty, admin)
-- **equipment_categories** - Equipment categories (Cameras, Audio, etc.)
-- **equipment_models** - Equipment models (Sony A7 IV, etc.)
-- **equipment_units** - Individual equipment units
-- **rooms** - Available rooms
-- **room_availability** - Room availability schedules
-- **room_reservations** - Room reservation requests
-- **borrow_requests** - Equipment borrow requests
-- **activity_log** - System activity logs
+---
 
 ## Features
 
@@ -225,88 +182,53 @@ npm run db:studio
 - 📝 Activity logging
 - 🔐 Role-based access control
 
+---
+
 ## Development
 
-### Type Checking
-
 ```bash
+# Type checking
 npx tsc --noEmit
-```
 
-### Linting
-
-```bash
+# Linting
 npm run lint
-```
 
-### Build
-
-```bash
+# Production build
 npm run build
 ```
+
+---
 
 ## Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user@localhost:5432/ccis_connect` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@host:port/railway` |
 | `NODE_ENV` | Node environment | `development` or `production` |
+
+---
 
 ## Troubleshooting
 
-### Database Connection Issues
+### `DATABASE_URL environment variable is not set`
 
-If you get connection errors:
+Make sure you have a `.env.local` file in the root directory with the correct `DATABASE_URL`. Ask a teammate if you don't have it.
 
-**macOS:**
-1. Check PostgreSQL is running: `brew services list`
-2. Verify database exists: `psql -l`
-3. Check your `DATABASE_URL` in `.env.local`
+### `ENOTFOUND postgres.railway.internal`
 
-**Windows:**
-1. Check PostgreSQL is running: Open Services (services.msc) and look for "postgresql-x64-15"
-2. Verify database exists: Open pgAdmin or run `psql -U postgres -l`
-3. Check your `DATABASE_URL` in `.env.local`
-4. Make sure you're using the correct password
+You're using the internal Railway host, which only works inside Railway's network. Replace it with the **public host** from Railway's Networking settings.
 
-**Linux:**
-1. Check PostgreSQL is running: `sudo systemctl status postgresql`
-2. Verify database exists: `sudo -u postgres psql -l`
-3. Check your `DATABASE_URL` in `.env.local`
+### Port 3000 Already in Use
 
-### Port Already in Use
-
-If port 3000 is already in use:
-
-**macOS/Linux:**
 ```bash
-# Kill the process using port 3000
+# macOS/Linux — kill process on port 3000
 lsof -ti:3000 | xargs kill -9
 
 # Or run on a different port
 PORT=3001 npm run dev
 ```
 
-**Windows (PowerShell):**
-```powershell
-# Find and kill the process using port 3000
-Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess | Stop-Process
-
-# Or run on a different port
-$env:PORT=3001; npm run dev
-```
-
-**Windows (Command Prompt):**
-```cmd
-# Find the process using port 3000
-netstat -ano | findstr :3000
-
-# Kill the process (replace PID with the actual process ID)
-taskkill /PID <PID> /F
-
-# Or run on a different port
-set PORT=3001 && npm run dev
-```
+---
 
 ## License
 
