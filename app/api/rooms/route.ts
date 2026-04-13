@@ -3,8 +3,17 @@ import { db, rooms, activityLog } from "@/lib/db";
 import { asc } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
 import { roomSchema } from "@/lib/validations/room";
-import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
+import { successResponse, errorResponse, validationErrorResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code: string }).code === "23505"
+  );
+}
 
 // GET /api/rooms — list all rooms
 export async function GET() {
@@ -42,6 +51,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof ZodError) {
       return validationErrorResponse(error);
+    }
+    if (isUniqueViolation(error)) {
+      return conflictResponse("A room with this number already exists");
     }
     return errorResponse("Internal server error");
   }
