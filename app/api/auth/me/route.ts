@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId, clearSession } from "@/lib/auth/session";
+import { toSafeUser } from "@/lib/auth/guards";
 
 export async function GET() {
   try {
@@ -29,9 +30,7 @@ export async function GET() {
       );
     }
 
-    // Return user data without passwordHash
-    const { passwordHash: _, ...safeUser } = user;
-    return NextResponse.json(safeUser);
+    return NextResponse.json(toSafeUser(user));
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

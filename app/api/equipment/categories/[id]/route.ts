@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
-import { db, equipmentCategories, activityLog } from "@/lib/db";
+import { db, equipmentCategories, equipmentModels, activityLog } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { categoryUpdateSchema } from "@/lib/validations/equipment";
-import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 
 export async function PUT(
@@ -11,6 +12,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = categoryUpdateSchema.parse(body);
@@ -46,8 +50,19 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const adminId = await getSessionUserId();
+
+    const childModel = await db.query.equipmentModels.findFirst({
+      where: eq(equipmentModels.categoryId, id),
+    });
+
+    if (childModel) {
+      return conflictResponse("Cannot delete category while it still has equipment models");
+    }
 
     await db
       .delete(equipmentCategories)
@@ -60,7 +75,7 @@ export async function DELETE(
     });
 
     return successResponse({ message: "Category deleted successfully" });
-  } catch (error) {
+  } catch {
     return errorResponse("Internal server error");
   }
 }

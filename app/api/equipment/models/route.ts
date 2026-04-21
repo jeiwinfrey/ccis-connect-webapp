@@ -2,12 +2,16 @@ import { NextRequest } from "next/server";
 import { db, equipmentModels, activityLog } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin, requireUser } from "@/lib/auth/guards";
 import { modelSchema } from "@/lib/validations/equipment";
 import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireUser();
+    if (!auth.ok) return auth.response;
+
     const categoryId = request.nextUrl.searchParams.get("category_id");
 
     let data;
@@ -21,13 +25,16 @@ export async function GET(request: NextRequest) {
     }
 
     return successResponse(data);
-  } catch (error) {
+  } catch {
     return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const validatedData = modelSchema.parse(body);
 

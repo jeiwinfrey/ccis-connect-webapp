@@ -52,7 +52,9 @@ export type SafeUser = Omit<User, "passwordHash">;
 // ---------------------------------------------------------------------------
 
 export type EquipmentUnitWithModel = EquipmentUnit & {
-  model: EquipmentModel;
+  model: EquipmentModel & {
+    category: EquipmentCategory;
+  };
 };
 
 export type EquipmentModelWithUnits = EquipmentModel & {

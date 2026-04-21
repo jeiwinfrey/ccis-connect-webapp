@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
-import { db, equipmentUnits, activityLog } from "@/lib/db";
+import { db, equipmentUnits, borrowRequests, activityLog } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { unitUpdateSchema } from "@/lib/validations/equipment";
-import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 
 export async function PUT(
@@ -11,6 +12,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = unitUpdateSchema.parse(body);
@@ -46,8 +50,19 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const adminId = await getSessionUserId();
+
+    const request = await db.query.borrowRequests.findFirst({
+      where: eq(borrowRequests.unitId, id),
+    });
+
+    if (request) {
+      return conflictResponse("Cannot delete unit while it has borrow request history");
+    }
 
     await db
       .delete(equipmentUnits)
@@ -60,7 +75,7 @@ export async function DELETE(
     });
 
     return successResponse({ message: "Unit deleted successfully" });
-  } catch (error) {
+  } catch {
     return errorResponse("Internal server error");
   }
 }

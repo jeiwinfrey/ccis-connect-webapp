@@ -38,7 +38,6 @@ import {
     SidebarProvider,
     SidebarInset,
     SidebarTrigger,
-    SidebarSeparator,
     useSidebar,
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -108,9 +107,6 @@ function AdminSidebar({
     setActive: (s: ActiveSection) => void;
     onLogout: () => void;
 }) {
-    const isBorrowActive = active.startsWith("borrow");
-    const isRoomActive = active.startsWith("room");
-    const isEquipActive = active.startsWith("equipment");
     const { state, setOpen } = useSidebar();
     const hoverOpenedRef = useRef(false);
 

@@ -148,10 +148,8 @@ function dayDiff(start: string, end: string): number {
 export function mapBorrowRequestToUI(req: BorrowRequestWithDetails): BorrowRequestUI {
   const modelName =
     req.unit?.model?.modelName ?? "Unknown";
-  const catEmoji = (req.unit?.model as any)
-    ?.equipmentCategories?.emoji ?? "📦";
-  const catName = (req.unit?.model as any)
-    ?.equipmentCategories?.name ?? "Equipment";
+  const catEmoji = req.unit?.model?.category?.emoji ?? "📦";
+  const catName = req.unit?.model?.category?.name ?? "Equipment";
   const days = dayDiff(req.startDate, req.endDate);
 
   return {

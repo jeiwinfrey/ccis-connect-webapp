@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { IconHistory, IconLoader2, IconCheck, IconX, IconSettings } from "@tabler/icons-react";
+import { IconHistory, IconLoader2, IconCheck, IconSettings } from "@tabler/icons-react";
 import { useActivityLog } from "@/hooks/useAdmin";
 
 type FilterTab = "all" | "approve-reject" | "manage";

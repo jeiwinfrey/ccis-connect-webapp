@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { db, roomReservations, activityLog } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
+import { ensureRoomSlotAvailable } from "@/lib/reservations/room";
 import { roomReservationUpdateSchema } from "@/lib/validations/room";
 import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
@@ -11,6 +13,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = roomReservationUpdateSchema.parse(body);
@@ -26,6 +31,18 @@ export async function PUT(
 
     if (!existing) {
       return notFoundResponse("Room reservation");
+    }
+
+    if (validatedData.status === "accepted" && validatedData.status !== existing.status) {
+      const slot = await ensureRoomSlotAvailable({
+        roomId: existing.roomId,
+        reservationDate: existing.reservationDate,
+        startTime: existing.startTime,
+        endTime: existing.endTime,
+        excludeReservationId: id,
+      });
+
+      if (!slot.ok) return slot.response;
     }
 
     // Update the room reservation

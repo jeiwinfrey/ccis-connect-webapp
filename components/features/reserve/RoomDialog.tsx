@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,7 +21,7 @@ import { useRoomReservationMutations, useRoomReservations } from "@/hooks/useRoo
 import { useRoomAvailability } from "@/hooks/useRooms";
 import { useAuth } from "@/lib/auth/context";
 import { type Room } from "./types";
-import type { RoomAvailability } from "@/lib/db/types";
+import type { RoomAvailability, RoomReservationWithDetails } from "@/lib/db/types";
 
 interface RoomDialogProps {
   room: Room | null;
@@ -68,7 +67,7 @@ function timeToDecimal(timeStr: string): number {
 }
 
 function isTimeSlotBooked(
-  reservations: any[],
+  reservations: RoomReservationWithDetails[],
   targetDate: string,
   slotStart: number
 ): boolean {
@@ -90,7 +89,7 @@ function getAvailableTimeSlots(
   availability: RoomAvailability[], 
   dayOfWeek: number, 
   isToday: boolean,
-  reservations: any[],
+  reservations: RoomReservationWithDetails[],
   targetDate: string
 ): number[] {
   const slots: number[] = [];
@@ -112,7 +111,13 @@ function getAvailableTimeSlots(
   return slots.sort((a, b) => a - b);
 }
 
-function getAvailableEndTimes(availability: RoomAvailability[], dayOfWeek: number, startTime: number | null, reservations: any[], targetDate: string): number[] {
+function getAvailableEndTimes(
+  availability: RoomAvailability[],
+  dayOfWeek: number,
+  startTime: number | null,
+  reservations: RoomReservationWithDetails[],
+  targetDate: string,
+): number[] {
   if (startTime == null) return [];
   const slot = availability.find(s => s.dayOfWeek === dayOfWeek && s.startHour <= startTime && s.endHour > startTime);
   if (!slot) return [];
@@ -155,7 +160,7 @@ function formatTime(hour: number): string {
 
 function toTimeString(hour: number): string {
   const h = Math.floor(hour);
-  const m = (hour % 1) * 60;
+  const m = Math.round((hour % 1) * 60);
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 

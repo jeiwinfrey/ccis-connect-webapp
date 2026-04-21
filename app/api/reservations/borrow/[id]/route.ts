@@ -2,8 +2,9 @@ import { NextRequest } from "next/server";
 import { db, borrowRequests, equipmentUnits, activityLog } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { borrowRequestUpdateSchema } from "@/lib/validations/borrow";
-import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 
 export async function PUT(
@@ -11,6 +12,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = borrowRequestUpdateSchema.parse(body);
@@ -36,6 +40,18 @@ export async function PUT(
     // Handle equipment unit status changes based on new status
     if (validatedData.status && validatedData.status !== existing.status) {
       if (validatedData.status === "accepted") {
+        const unit = await db.query.equipmentUnits.findFirst({
+          where: eq(equipmentUnits.id, existing.unitId),
+        });
+
+        if (!unit) {
+          return notFoundResponse("Equipment unit");
+        }
+
+        if (unit.status !== "available" && existing.status !== "accepted") {
+          return conflictResponse("This equipment unit is no longer available");
+        }
+
         await db
           .update(equipmentUnits)
           .set({ status: "on-loan" })
@@ -74,7 +90,11 @@ export async function PUT(
         user: true,
         unit: {
           with: {
-            model: true,
+            model: {
+              with: {
+                category: true,
+              },
+            },
           },
         },
       },

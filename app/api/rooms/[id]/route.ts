@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db, rooms, roomAvailability, roomReservations, activityLog } from "@/lib/db";
 import { eq, and, gte, inArray } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { roomUpdateSchema } from "@/lib/validations/room";
 import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
@@ -12,6 +13,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = roomUpdateSchema.parse(body);
@@ -48,6 +52,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const adminId = await getSessionUserId();
 

@@ -5,7 +5,7 @@ export const categorySchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   emoji: z.string().min(1, "Emoji is required").max(10),
   description: z.string().min(1, "Description is required").max(500),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format (use #RRGGBB)"),
+  color: z.string().min(1, "Color class is required").max(120),
 });
 
 export const categoryUpdateSchema = categorySchema.partial();
@@ -18,7 +18,7 @@ export const modelSchema = z.object({
   imageUrl: z.string().url("Invalid image URL").or(z.literal("")),
 });
 
-export const modelUpdateSchema = modelSchema.partial().omit({ categoryId: true });
+export const modelUpdateSchema = modelSchema.partial();
 
 // Equipment Unit Validation
 export const unitSchema = z.object({

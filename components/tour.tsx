@@ -353,8 +353,23 @@ export default function Tour() {
 
         sceneRef.current = targetScene;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- speed exists at runtime but is missing from PanoramaOptions type definitions
-        await viewer.setPanorama(SCENES[targetScene].panorama, {
+        type PanoramaTransitionOptions = NonNullable<Parameters<typeof viewer.setPanorama>[1]> & {
+          caption: string;
+          position: {
+            yaw: string;
+            pitch: string;
+          };
+          zoom: number;
+          speed: string;
+          transition: {
+            effect: "fade";
+            rotation: boolean;
+            speed: number;
+          };
+          showLoader: boolean;
+        };
+
+        const panoramaOptions: PanoramaTransitionOptions = {
           caption: SCENES[targetScene].title,
           position: {
             yaw: SCENES[targetScene].startYaw,
@@ -368,7 +383,9 @@ export default function Tour() {
             speed: 800,
           },
           showLoader: true,
-        } as any);
+        };
+
+        await viewer.setPanorama(SCENES[targetScene].panorama, panoramaOptions);
 
         // @ts-expect-error -- setMarkers exists at runtime but is missing from the plugin type definitions
         markersPlugin.setMarkers(buildMarkers(targetScene));

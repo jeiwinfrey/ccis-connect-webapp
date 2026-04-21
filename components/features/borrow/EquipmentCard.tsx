@@ -18,7 +18,6 @@ interface EquipmentCardProps {
 export function EquipmentCard({
   item,
   color,
-  emoji,
   categoryName,
   categoryEmoji,
   onRequestComplete,

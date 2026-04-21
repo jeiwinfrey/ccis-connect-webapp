@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -8,22 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
 import {
   IconPlus, IconPencil, IconTrash, IconDoor, IconCalendar, IconLoader2,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
-import { useRooms, useRoomAvailability, useRoomMutations } from "@/hooks/useRooms";
+import { useRooms, useRoomMutations } from "@/hooks/useRooms";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { AvailabilityCalendar, type TimeSlot } from "@/components/shared/AvailabilityCalendar";
-import type { Room, RoomAvailability } from "@/lib/db/types";
+import type { Room } from "@/lib/db/types";
 
 export default function RoomManagement() {
   const { rooms, loading, refetch } = useRooms();
@@ -44,23 +42,30 @@ export default function RoomManagement() {
 
   // Availability schedule state
   const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
 
-  // Load availability when editing schedule
-  const { availability, refetch: refetchAvailability } = useRoomAvailability(scheduleRoom?.id ?? null);
-
-  useEffect(() => {
-    if (availability.length > 0) {
+  const loadAvailability = useCallback(async (roomId: string) => {
+    setScheduleLoading(true);
+    try {
+      const res = await window.fetch(`/api/rooms/${roomId}/availability`);
+      if (!res.ok) throw new Error("Failed to fetch availability");
+      const json = await res.json();
+      const availability = Array.isArray(json) ? json : json.data ?? [];
       setSlots(
-        availability.map((a) => ({
+        availability.map((a: TimeSlot) => ({
           dayOfWeek: a.dayOfWeek,
           startHour: a.startHour,
           endHour: a.endHour,
         })),
       );
-    } else if (scheduleRoom) {
+    } catch (e) {
+      console.error(e);
       setSlots([]);
+      toast.error("Failed to load room schedule");
+    } finally {
+      setScheduleLoading(false);
     }
-  }, [availability, scheduleRoom]);
+  }, []);
 
   // Auto-refresh when user returns to the page
   useEffect(() => {
@@ -68,14 +73,14 @@ export default function RoomManagement() {
       if (!document.hidden) {
         refetch();
         if (scheduleRoom) {
-          refetchAvailability();
+          void loadAvailability(scheduleRoom.id);
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [refetch, refetchAvailability, scheduleRoom]);
+  }, [loadAvailability, refetch, scheduleRoom]);
 
   function openAdd() {
     setEditing(null);
@@ -91,6 +96,11 @@ export default function RoomManagement() {
     setFloor(room.floor);
     setNotes(room.notes || "");
     setDialogOpen(true);
+  }
+
+  function openSchedule(room: Room) {
+    setScheduleRoom(room);
+    void loadAvailability(room.id);
   }
 
   async function handleSave() {
@@ -136,7 +146,6 @@ export default function RoomManagement() {
     try {
       await mutations.setAvailability(scheduleRoom.id, slots);
       setScheduleRoom(null);
-      refetchAvailability();
       toast.success("Schedule saved");
     } catch (e) {
       console.error(e);
@@ -237,7 +246,7 @@ export default function RoomManagement() {
                               size="sm"
                               variant="ghost"
                               className="h-8 px-2.5 text-xs"
-                              onClick={() => setScheduleRoom(room)}
+                              onClick={() => openSchedule(room)}
                             >
                               <IconCalendar className="size-3.5" /> Schedule
                             </Button>
@@ -411,7 +420,13 @@ export default function RoomManagement() {
             </div>
           </DialogHeader>
 
-          <AvailabilityCalendar selectedSlots={slots} onSlotsChange={setSlots} />
+          {scheduleLoading ? (
+            <div className="flex items-center justify-center py-10 text-muted-foreground">
+              <IconLoader2 className="size-5 animate-spin mr-2" /> Loading schedule...
+            </div>
+          ) : (
+            <AvailabilityCalendar selectedSlots={slots} onSlotsChange={setSlots} />
+          )}
 
           <DialogFooter className="mt-2">
             <Button variant="outline" onClick={() => setScheduleRoom(null)}>
