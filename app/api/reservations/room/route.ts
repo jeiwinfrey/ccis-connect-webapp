@@ -7,6 +7,7 @@ import { roomReservationSchema } from "@/lib/validations/room";
 import { successResponse, errorResponse, validationErrorResponse, badRequestResponse, forbiddenResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 import type { RoomReservation } from "@/lib/db/types";
+import { notifyAdminsNewRoom } from "@/lib/sms/notifications";
 
 const ROOM_RESERVATION_STATUSES = new Set(["pending", "accepted", "rejected"]);
 
@@ -81,6 +82,17 @@ export async function POST(request: NextRequest) {
         room: true,
       },
     });
+
+    // Fire-and-forget SMS notification to admins
+    try {
+      const requesterName = completeData?.user?.name ?? "Unknown";
+      const roomName = completeData?.room?.name ?? "Unknown";
+      notifyAdminsNewRoom(requesterName, roomName).catch((err) => {
+        console.error("[SMS] Failed to notify admins about new room reservation:", err);
+      });
+    } catch (smsError) {
+      console.error("[SMS] Failed to initiate admin notification:", smsError);
+    }
 
     return successResponse(completeData, 201);
   } catch (error) {

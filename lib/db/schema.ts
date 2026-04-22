@@ -62,7 +62,7 @@ export const roomAvailability = pgTable("room_availability", {
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  email: text("email").notNull().unique(),
+  phoneNumber: text("phone_number").notNull(),
   studentId: text("student_id"),
   department: text("department").notNull(),
   role: text("role", { enum: ["student", "faculty", "admin", "super_admin"] }).notNull(),

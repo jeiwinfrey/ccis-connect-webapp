@@ -7,6 +7,7 @@ import { ensureRoomSlotAvailable } from "@/lib/reservations/room";
 import { roomReservationUpdateSchema } from "@/lib/validations/room";
 import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
+import { notifyRequesterRoomDecision } from "@/lib/sms/notifications";
 
 export async function PUT(
   request: NextRequest,
@@ -68,6 +69,19 @@ export async function PUT(
           action,
           detail: `Room reservation by "${requesterName}" for "${roomName}" was ${validatedData.status}`,
         });
+      }
+
+      // Send SMS notification to requester on accept/reject
+      if (validatedData.status === "accepted" || validatedData.status === "rejected") {
+        try {
+          const requesterPhone = existing.user?.phoneNumber;
+          const roomName = existing.room?.name ?? "unknown room";
+          if (requesterPhone) {
+            await notifyRequesterRoomDecision(requesterPhone, validatedData.status, roomName);
+          }
+        } catch (smsError) {
+          console.error("[SMS] Failed to notify requester about room decision:", smsError);
+        }
       }
     }
 

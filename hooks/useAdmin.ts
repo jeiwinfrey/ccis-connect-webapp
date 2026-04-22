@@ -101,7 +101,7 @@ export function useAdminMutations() {
 
   async function createUser(data: {
     name: string;
-    email: string;
+    phoneNumber: string;
     role: string;
     department: string;
     studentId?: string | null;

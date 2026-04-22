@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { borrowRequestUpdateSchema } from "@/lib/validations/borrow";
 import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
+import { notifyRequesterBorrowDecision } from "@/lib/sms/notifications";
 
 export async function PUT(
   request: NextRequest,
@@ -80,6 +81,18 @@ export async function PUT(
           action,
           detail: `Borrow request by "${requesterName}" was ${validatedData.status}`,
         });
+      }
+
+      // Send SMS notification to requester on accept/reject
+      if (validatedData.status === "accepted" || validatedData.status === "rejected") {
+        try {
+          const requesterPhone = existing.user?.phoneNumber;
+          if (requesterPhone) {
+            await notifyRequesterBorrowDecision(requesterPhone, validatedData.status, existing.unitId);
+          }
+        } catch (smsError) {
+          console.error("[SMS] Failed to notify requester about borrow decision:", smsError);
+        }
       }
     }
 

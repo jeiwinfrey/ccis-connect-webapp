@@ -32,29 +32,29 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
+  const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = users.filter(row =>
-    [row.name, row.email, row.role]
+    [row.name, row.phoneNumber, row.role]
       .some(v => v.toLowerCase().includes(search.toLowerCase()))
   );
 
   async function handleAdd() {
-    if (!newName.trim() || !newEmail.trim() || !newUsername.trim() || !newPassword.trim()) return;
+    if (!newName.trim() || !newPhoneNumber.trim() || !newUsername.trim() || !newPassword.trim()) return;
     try {
       await mutations.createUser({
         name: newName.trim(),
-        email: newEmail.trim(),
+        phoneNumber: newPhoneNumber.trim(),
         username: newUsername.trim(),
         passwordHash: newPassword.trim(), // In production, this should be hashed on the server
         role: "admin",
         department: "Administration",
       });
       setNewName("");
-      setNewEmail("");
+      setNewPhoneNumber("");
       setNewUsername("");
       setNewPassword("");
       setAddOpen(false);
@@ -117,7 +117,7 @@ export default function Admin() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
+                      <TableHead>Phone Number</TableHead>
                       <TableHead>Department</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Added On</TableHead>
@@ -134,7 +134,7 @@ export default function Admin() {
                     ) : filtered.map((row) => (
                       <TableRow key={row.id}>
                         <TableCell className="font-semibold text-sm">{row.name}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{row.email}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{row.phoneNumber}</TableCell>
                         <TableCell className="text-sm">{row.department}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`text-xs ${roleBadge[row.role] ?? ""}`}>
@@ -185,15 +185,15 @@ export default function Admin() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="admin-email" className="text-sm font-semibold">
-                Email Address <span className="text-destructive">*</span>
+              <Label htmlFor="admin-phone" className="text-sm font-semibold">
+                Phone Number <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="admin-email"
-                type="email"
-                placeholder="e.g. juan@ccis.edu"
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
+                id="admin-phone"
+                type="tel"
+                placeholder="+639XXXXXXXXX"
+                value={newPhoneNumber}
+                onChange={e => setNewPhoneNumber(e.target.value)}
                 required
               />
             </div>
@@ -227,7 +227,7 @@ export default function Admin() {
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
             <Button 
               onClick={handleAdd} 
-              disabled={mutations.loading || !newName.trim() || !newEmail.trim() || !newUsername.trim() || !newPassword.trim()}
+              disabled={mutations.loading || !newName.trim() || !newPhoneNumber.trim() || !newUsername.trim() || !newPassword.trim()}
             >
               {mutations.loading ? "Adding..." : "Add Admin"}
             </Button>

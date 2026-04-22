@@ -127,7 +127,7 @@ export default function BorrowRequestPending() {
                       <TableRow key={row.id}>
                         <TableCell>
                           <div className="font-semibold text-sm">{row.user?.name ?? "—"}</div>
-                          <div className="text-xs text-muted-foreground">{row.user?.studentId ?? row.user?.email ?? ""}</div>
+                          <div className="text-xs text-muted-foreground">{row.user?.studentId ?? row.user?.phoneNumber ?? ""}</div>
                         </TableCell>
                         <TableCell className="text-sm">{row.unit?.model?.modelName ?? "—"}</TableCell>
                         <TableCell className="text-sm font-mono">{row.unit?.unitId ?? "—"}</TableCell>
@@ -196,7 +196,7 @@ export default function BorrowRequestPending() {
                   </div>
                   <StatusBadge status={selected.status} />
                 </div>
-                <p className="text-xs text-muted-foreground">{selected.user?.email ?? ""}</p>
+                <p className="text-xs text-muted-foreground">{selected.user?.phoneNumber ?? ""}</p>
               </div>
 
               <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">

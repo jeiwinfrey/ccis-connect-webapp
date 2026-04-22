@@ -6,6 +6,7 @@ import { borrowRequestSchema } from "@/lib/validations/borrow";
 import { successResponse, errorResponse, validationErrorResponse, conflictResponse, notFoundResponse, badRequestResponse, forbiddenResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 import type { BorrowRequest } from "@/lib/db/types";
+import { notifyAdminsNewBorrow } from "@/lib/sms/notifications";
 
 const BORROW_STATUSES = new Set(["pending", "accepted", "rejected", "returned"]);
 
@@ -124,6 +125,16 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Fire-and-forget SMS notification to admins
+    try {
+      const requesterName = completeData?.user?.name ?? "Unknown";
+      notifyAdminsNewBorrow(requesterName, validatedData.unitId).catch((err) => {
+        console.error("[SMS] Failed to notify admins about new borrow request:", err);
+      });
+    } catch (smsError) {
+      console.error("[SMS] Failed to initiate admin notification:", smsError);
+    }
 
     return successResponse(completeData, 201);
   } catch (error) {

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         createdAt: activityLog.createdAt,
         users: {
           name: users.name,
-          email: users.email,
+          phoneNumber: users.phoneNumber,
         },
       })
       .from(activityLog)

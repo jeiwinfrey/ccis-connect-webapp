@@ -219,7 +219,7 @@ export default function RoomReservationPending() {
                   </div>
                   <StatusBadge status={selected.status} />
                 </div>
-                <p className="text-xs text-muted-foreground">{selected.user?.email ?? ""}</p>
+                <p className="text-xs text-muted-foreground">{selected.user?.phoneNumber ?? ""}</p>
               </div>
 
               {/* Room */}
