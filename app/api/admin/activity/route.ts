@@ -1,10 +1,14 @@
 import { NextRequest } from "next/server";
 import { db, activityLog, users } from "@/lib/db";
 import { desc, eq } from "drizzle-orm";
+import { requireAdmin } from "@/lib/auth/guards";
 import { successResponse, errorResponse } from "@/lib/api/response";
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const limitParam = request.nextUrl.searchParams.get("limit");
     const limit = limitParam ? parseInt(limitParam, 10) : 50;
 
@@ -17,7 +21,7 @@ export async function GET(request: NextRequest) {
         createdAt: activityLog.createdAt,
         users: {
           name: users.name,
-          email: users.email,
+          phoneNumber: users.phoneNumber,
         },
       })
       .from(activityLog)
@@ -26,7 +30,7 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     return successResponse(data);
-  } catch (error) {
+  } catch {
     return errorResponse("Internal server error");
   }
 }

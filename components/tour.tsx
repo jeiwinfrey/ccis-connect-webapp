@@ -1,9 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Switch } from "./ui/switch";
-import { Button } from "./ui/button";
-import Image from "next/image";
 
 type SceneId =
   | "lobby"
@@ -53,22 +50,8 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-70deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-dit-entrance",
-        pitch: "-4deg",
-        yaw: "-30deg",
-        target: "dit-entrance",
-        label: "DIT Entrance",
-        arrow: "right",
-      },
-      {
-        id: "to-deans-office-entrance",
-        pitch: "-4deg",
-        yaw: "-110deg",
-        target: "deans-office-entrance",
-        label: "Dean's Office Entrance",
-        arrow: "left",
-      },
+      { id: "to-dit-entrance", pitch: "-4deg", yaw: "-30deg", target: "dit-entrance", label: "DIT Entrance", arrow: "right" },
+      { id: "to-deans-office-entrance", pitch: "-4deg", yaw: "-110deg", target: "deans-office-entrance", label: "Dean's Office Entrance", arrow: "left" },
     ],
   },
   "dit-entrance": {
@@ -78,30 +61,9 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-70deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-hyflex1-entrance",
-        pitch: "-20deg",
-        yaw: "-70deg",
-        target: "hyflex1-entrance",
-        label: "Hyflex 1 Entrance",
-        arrow: "up",
-      },
-      {
-        id: "to-lobby",
-        pitch: "-14deg",
-        yaw: "70deg",
-        target: "lobby",
-        label: "Lobby",
-        arrow: "up",
-      },
-      {
-        id: "to-deans-office-entrance",
-        pitch: "-15deg",
-        yaw: "110deg",
-        target: "deans-office-entrance",
-        label: "Dean's Office Entrance",
-        arrow: "up",
-      },
+      { id: "to-hyflex1-entrance", pitch: "-20deg", yaw: "-70deg", target: "hyflex1-entrance", label: "Hyflex 1 Entrance", arrow: "up" },
+      { id: "to-lobby", pitch: "-14deg", yaw: "70deg", target: "lobby", label: "Lobby", arrow: "up" },
+      { id: "to-deans-office-entrance", pitch: "-15deg", yaw: "110deg", target: "deans-office-entrance", label: "Dean's Office Entrance", arrow: "up" },
     ],
   },
   "cs-intersection-1st": {
@@ -119,14 +81,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-60deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-dct-entrance",
-        pitch: "-20deg",
-        yaw: "-60deg",
-        target: "dct-entrance",
-        label: "DCT Entrance",
-        arrow: "up",
-      },
+      { id: "to-dct-entrance", pitch: "-20deg", yaw: "-60deg", target: "dct-entrance", label: "DCT Entrance", arrow: "up" },
     ],
   },
   "dct-entrance": {
@@ -135,21 +90,10 @@ const SCENES: Record<SceneId, SceneConfig> = {
     panorama: "/panoramic-images/DCT-entrance.JPG",
     startYaw: "-110deg",
     startPitch: "0deg",
-    arrows: [{
-      id: "to-cs-intersection-1st",
-      pitch: "-20deg",
-      yaw: "-110deg",
-      target: "cs-intersection-1st",
-      label: "CS Intersection 1st",
-      arrow: "up",
-    }, {
-      id: "to-deans-office-entrance",
-      pitch: "-20deg",
-      yaw: "70deg",
-      target: "deans-office-entrance",
-      label: "Dean's Office Entrance",
-      arrow: "up",
-    }],
+    arrows: [
+      { id: "to-cs-intersection-1st", pitch: "-20deg", yaw: "-110deg", target: "cs-intersection-1st", label: "CS Intersection 1st", arrow: "up" },
+      { id: "to-deans-office-entrance", pitch: "-20deg", yaw: "70deg", target: "deans-office-entrance", label: "Dean's Office Entrance", arrow: "up" },
+    ],
   },
   "hyflex1-entrance": {
     id: "hyflex1-entrance",
@@ -158,22 +102,8 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-150deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-dit-intersection-1st",
-        pitch: "-20deg",
-        yaw: "-150deg",
-        target: "DIT-intersection-1st",
-        label: "DIT Intersection 1st",
-        arrow: "up",
-      },
-      {
-        id: "to-dit-entrance",
-        pitch: "-20deg",
-        yaw: "30deg",
-        target: "dit-entrance",
-        label: "DIT Entrance",
-        arrow: "up",
-      },
+      { id: "to-dit-intersection-1st", pitch: "-20deg", yaw: "-150deg", target: "DIT-intersection-1st", label: "DIT Intersection 1st", arrow: "up" },
+      { id: "to-dit-entrance", pitch: "-20deg", yaw: "30deg", target: "dit-entrance", label: "DIT Entrance", arrow: "up" },
     ],
   },
   "DIT-intersection-1st": {
@@ -183,30 +113,9 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-100deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-100b-entrance",
-        pitch: "-14deg",
-        yaw: "-145deg",
-        target: "100B-entrance",
-        label: "100B Entrance",
-        arrow: "left",
-      },
-      {
-        id: "to-it-stairs",
-        pitch: "-14deg",
-        yaw: "-60deg",
-        target: "IT-stairs",
-        label: "IT Stairs",
-        arrow: "right",
-      },
-      {
-        id: "to-hyflex1-entrance",
-        pitch: "-20deg",
-        yaw: "90deg",
-        target: "hyflex1-entrance",
-        label: "Hyflex 1 Entrance",
-        arrow: "up",
-      },
+      { id: "to-100b-entrance", pitch: "-14deg", yaw: "-145deg", target: "100B-entrance", label: "100B Entrance", arrow: "left" },
+      { id: "to-it-stairs", pitch: "-14deg", yaw: "-60deg", target: "IT-stairs", label: "IT Stairs", arrow: "right" },
+      { id: "to-hyflex1-entrance", pitch: "-20deg", yaw: "90deg", target: "hyflex1-entrance", label: "Hyflex 1 Entrance", arrow: "up" },
     ],
   },
   "100B-entrance": {
@@ -216,22 +125,8 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-150deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-100a-entrance",
-        pitch: "-20deg",
-        yaw: "-150deg",
-        target: "100A-entrance",
-        label: "100A Entrance",
-        arrow: "up",
-      },
-      {
-        id: "to-it-intersection-1st",
-        pitch: "-20deg",
-        yaw: "30deg",
-        target: "DIT-intersection-1st",
-        label: "IT Intersection 1st",
-        arrow: "up",
-      },
+      { id: "to-100a-entrance", pitch: "-20deg", yaw: "-150deg", target: "100A-entrance", label: "100A Entrance", arrow: "up" },
+      { id: "to-it-intersection-1st", pitch: "-20deg", yaw: "30deg", target: "DIT-intersection-1st", label: "IT Intersection 1st", arrow: "up" },
     ],
   },
   "100A-entrance": {
@@ -241,14 +136,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "-90deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-100b-entrance",
-        pitch: "-20deg",
-        yaw: "-90deg",
-        target: "100B-entrance",
-        label: "100B Entrance",
-        arrow: "up",
-      },
+      { id: "to-100b-entrance", pitch: "-20deg", yaw: "-90deg", target: "100B-entrance", label: "100B Entrance", arrow: "up" },
     ],
   },
   "IT-stairs": {
@@ -258,14 +146,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     startYaw: "20deg",
     startPitch: "0deg",
     arrows: [
-      {
-        id: "to-it-intersection-1st-from-stairs",
-        pitch: "-30deg",
-        yaw: "-2deg",
-        target: "DIT-intersection-1st",
-        label: "IT Intersection 1st",
-        arrow: "up",
-      },
+      { id: "to-it-intersection-1st-from-stairs", pitch: "-30deg", yaw: "-2deg", target: "DIT-intersection-1st", label: "IT Intersection 1st", arrow: "up" },
     ],
   },
 };
@@ -275,54 +156,32 @@ export default function Tour() {
   const viewerRef = useRef<{ destroy: () => void } | null>(null);
   const sceneRef = useRef<SceneId>("lobby");
   const [loading, setLoading] = useState(true);
-  const [is3D, setIs3D] = useState(true);
-  const [selectedFloor, setSelectedFloor] = useState<"1st" | "2nd">("1st");
 
   useEffect(() => {
-    if (!is3D) {
-      return;
-    }
-
     let mounted = true;
     let detachMarkerHandler: (() => void) | null = null;
 
     const init = async () => {
-      if (!containerRef.current) {
-        return;
-      }
+      if (!containerRef.current) return;
 
       const [{ Viewer }, { MarkersPlugin }] = await Promise.all([
         import("@photo-sphere-viewer/core"),
         import("@photo-sphere-viewer/markers-plugin"),
       ]);
 
-      if (!mounted || !containerRef.current) {
-        return;
-      }
+      if (!mounted || !containerRef.current) return;
 
-      const buildMarkers = (sceneId: SceneId) => {
-        return SCENES[sceneId].arrows.map((arrow) => ({
+      const buildMarkers = (sceneId: SceneId) =>
+        SCENES[sceneId].arrows.map((arrow) => ({
           id: arrow.id,
-          position: {
-            pitch: arrow.pitch,
-            yaw: arrow.yaw,
-          },
+          position: { pitch: arrow.pitch, yaw: arrow.yaw },
           html: `<div class="tour-scene-arrow-inner">${TABLER_ARROW_SVGS[arrow.arrow]}</div>`,
-          size: {
-            width: 42,
-            height: 42,
-          },
+          size: { width: 42, height: 42 },
           anchor: "center center",
-          tooltip: {
-            content: arrow.label,
-            position: "top center",
-          },
+          tooltip: { content: arrow.label, position: "top center" },
           className: "tour-scene-arrow",
-          data: {
-            targetScene: arrow.target,
-          },
+          data: { targetScene: arrow.target },
         }));
-      };
 
       const viewer = new Viewer({
         container: containerRef.current,
@@ -342,46 +201,38 @@ export default function Tour() {
       const markersPlugin = viewer.getPlugin(MarkersPlugin);
 
       const onSelectMarker = async (event: Event) => {
-        const marker = (event as {
-          marker?: { data?: { targetScene?: SceneId } };
-        }).marker;
+        const marker = (event as { marker?: { data?: { targetScene?: SceneId } } }).marker;
         const targetScene = marker?.data?.targetScene;
-
-        if (!targetScene || targetScene === sceneRef.current) {
-          return;
-        }
+        if (!targetScene || targetScene === sceneRef.current) return;
 
         sceneRef.current = targetScene;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- speed exists at runtime but is missing from PanoramaOptions type definitions
+        type PanoramaTransitionOptions = NonNullable<Parameters<typeof viewer.setPanorama>[1]> & {
+          caption: string;
+          position: { yaw: string; pitch: string };
+          zoom: number;
+          speed: string;
+          transition: { effect: "fade"; rotation: boolean; speed: number };
+          showLoader: boolean;
+        };
+
         await viewer.setPanorama(SCENES[targetScene].panorama, {
           caption: SCENES[targetScene].title,
-          position: {
-            yaw: SCENES[targetScene].startYaw,
-            pitch: SCENES[targetScene].startPitch,
-          },
+          position: { yaw: SCENES[targetScene].startYaw, pitch: SCENES[targetScene].startPitch },
           zoom: 0,
           speed: "18rpm",
-          transition: {
-            effect: "fade",
-            rotation: false,
-            speed: 800,
-          },
+          transition: { effect: "fade", rotation: false, speed: 800 },
           showLoader: true,
-        } as any);
+        } as PanoramaTransitionOptions);
 
         // @ts-expect-error -- setMarkers exists at runtime but is missing from the plugin type definitions
         markersPlugin.setMarkers(buildMarkers(targetScene));
       };
 
       markersPlugin.addEventListener("select-marker", onSelectMarker);
-      detachMarkerHandler = () => {
-        markersPlugin.removeEventListener("select-marker", onSelectMarker);
-      };
+      detachMarkerHandler = () => markersPlugin.removeEventListener("select-marker", onSelectMarker);
 
-      if (mounted) {
-        setLoading(false);
-      }
+      if (mounted) setLoading(false);
     };
 
     void init();
@@ -389,71 +240,26 @@ export default function Tour() {
     return () => {
       mounted = false;
       detachMarkerHandler?.();
-
       if (viewerRef.current) {
         viewerRef.current.destroy();
         viewerRef.current = null;
       }
     };
-  }, [is3D]);
+  }, []);
 
   return (
     <section className="px-6 pb-8 pt-4 md:px-10">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
-          <p className="text-sm text-muted-foreground">
-            {is3D 
-              ? "Drag to look around, then click the arrow markers to move between scenes."
-              : "View the floor plan and navigate between floors."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium ${is3D ? "text-foreground" : "text-muted-foreground"}`}>
-            3D
-          </span>
-          <Switch checked={!is3D} onCheckedChange={(checked) => setIs3D(!checked)} />
-          <span className={`text-sm font-medium ${!is3D ? "text-foreground" : "text-muted-foreground"}`}>
-            2D
-          </span>
-        </div>
+      <div className="mb-3">
+        <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
+        <p className="text-sm text-muted-foreground">
+          Drag to look around, then click the arrow markers to move between scenes.
+        </p>
       </div>
 
-      {is3D ? (
-        <>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div ref={containerRef} className="h-[78vh] min-h-[420px] w-full" />
-          </div>
-          {loading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
-        </>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              variant={selectedFloor === "1st" ? "default" : "outline"}
-              onClick={() => setSelectedFloor("1st")}
-            >
-              1st Floor
-            </Button>
-            <Button
-              variant={selectedFloor === "2nd" ? "default" : "outline"}
-              onClick={() => setSelectedFloor("2nd")}
-            >
-              2nd Floor
-            </Button>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div className="relative h-[78vh] min-h-[420px] w-full bg-muted">
-              <Image
-                src={selectedFloor === "1st" ? "/floor-plan/43111.png" : "/floor-plan/67235.png"}
-                alt={`${selectedFloor} Floor Plan`}
-                fill
-                className="object-contain p-4"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div ref={containerRef} className="h-[78vh] min-h-[420px] w-full" />
+      </div>
+      {loading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
 
       <style jsx>{`
         :global(.tour-scene-arrow) {
@@ -463,7 +269,6 @@ export default function Tour() {
           place-items: center;
           transform: translate(-50%, -50%);
         }
-
         :global(.tour-scene-arrow-inner) {
           width: 42px;
           height: 42px;
@@ -478,7 +283,6 @@ export default function Tour() {
           box-shadow: 0 8px 18px color-mix(in srgb, var(--primary) 30%, transparent);
           transition: transform 0.18s ease;
         }
-
         :global(.tour-scene-arrow:hover .tour-scene-arrow-inner) {
           transform: scale(1.08);
         }

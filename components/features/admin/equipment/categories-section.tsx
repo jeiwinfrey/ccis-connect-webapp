@@ -50,7 +50,7 @@ export function CategoriesSection() {
       name: name.trim(), 
       emoji: "📦", // Default emoji
       description: description.trim(), 
-      color: "#3b82f6" // Default blue color
+      color: "bg-blue-100 dark:bg-blue-500/20" // Default blue background classes
     };
     try {
       if (editing) {

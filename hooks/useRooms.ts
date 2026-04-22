@@ -100,7 +100,7 @@ export function useAvailableRooms(date?: string, startTime?: string, endTime?: s
 export function useRoomMutations() {
   const [loading, setLoading] = useState(false);
 
-  async function createRoom(data: { roomNumber: string; name: string; type: string; capacity: string; floor: string }) {
+  async function createRoom(data: { roomNumber: string; name: string; type: string; capacity: string; floor: string; notes?: string }) {
     setLoading(true);
     try {
       const res = await window.fetch("/api/rooms", {
@@ -113,7 +113,7 @@ export function useRoomMutations() {
     } finally { setLoading(false); }
   }
 
-  async function updateRoom(id: string, data: Partial<{ roomNumber: string; name: string; type: string; capacity: string; floor: string }>) {
+  async function updateRoom(id: string, data: Partial<{ roomNumber: string; name: string; type: string; capacity: string; floor: string; notes: string }>) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/rooms/${id}`, {

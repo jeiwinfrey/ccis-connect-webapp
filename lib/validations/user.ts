@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+const PH_MOBILE_REGEX = /^\+63\d{10}$/;
+
 // User Validation
 export const userSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  email: z.string().email("Invalid email address"),
+  phoneNumber: z.string().regex(PH_MOBILE_REGEX, "Must be a valid Philippine mobile number (+63XXXXXXXXXX)"),
   studentId: z.string().max(50).optional().nullable(),
   department: z.string().min(1, "Department is required").max(100),
   role: z.enum(["student", "faculty", "admin", "super_admin"]),
@@ -11,7 +13,7 @@ export const userSchema = z.object({
   passwordHash: z.string().optional().nullable(),
 });
 
-export const userUpdateSchema = userSchema.partial().omit({ email: true });
+export const userUpdateSchema = userSchema.partial().omit({ phoneNumber: true });
 
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),

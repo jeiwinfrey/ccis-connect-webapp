@@ -29,7 +29,7 @@ export function FloorMap({ topRooms, bottomRooms, onSelectRoom }: FloorMapProps)
       )}
 
       <div className="bg-muted border-y border-border flex items-center justify-center py-3">
-        <span className="text-xs text-muted-foreground font-medium">Stairs / Lift</span>
+        <span className="text-xs text-muted-foreground font-medium"></span>
       </div>
 
       {bottomRooms.length > 0 && (

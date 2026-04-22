@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 const SESSION_COOKIE = "ccis_session";
 const ROLE_COOKIE = "ccis_role";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = request.cookies.get(SESSION_COOKIE)?.value;
   const role = request.cookies.get(ROLE_COOKIE)?.value;
@@ -23,12 +23,6 @@ export function middleware(request: NextRequest) {
   const isLogin = pathname === "/";
   const isVirtualMap = pathname === "/virtual-map";
   const isReserve = pathname.startsWith("/reserve");
-  const isUserRoute =
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/borrow") ||
-    isReserve ||
-    isVirtualMap;
-
   // ---- No session ----
   if (!session) {
     // Public routes: login page and virtual map

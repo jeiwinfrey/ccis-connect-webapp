@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db, equipmentUnits, activityLog } from "@/lib/db";
 import { eq, and } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin, requireUser } from "@/lib/auth/guards";
 import { unitSchema } from "@/lib/validations/equipment";
 import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
@@ -9,6 +10,9 @@ import type { EquipmentUnit } from "@/lib/db/types";
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireUser();
+    if (!auth.ok) return auth.response;
+
     const modelId = request.nextUrl.searchParams.get("model_id");
     const status = request.nextUrl.searchParams.get("status");
     const include = request.nextUrl.searchParams.get("include");
@@ -51,13 +55,16 @@ export async function GET(request: NextRequest) {
     }
 
     return successResponse(data);
-  } catch (error) {
+  } catch {
     return errorResponse("Internal server error");
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const validatedData = unitSchema.parse(body);
 

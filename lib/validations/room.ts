@@ -35,6 +35,9 @@ export const roomReservationSchema = z.object({
   purpose: z.string().min(1, "Purpose is required").max(500),
   status: z.enum(["pending", "accepted", "rejected"]).default("pending"),
   adminNotes: z.string().max(500).optional(),
+}).refine((data) => data.startTime < data.endTime, {
+  message: "End time must be after start time",
+  path: ["endTime"],
 });
 
 export const roomReservationUpdateSchema = z.object({

@@ -2,15 +2,20 @@ import { NextRequest } from "next/server";
 import { db, borrowRequests, equipmentUnits, activityLog } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin } from "@/lib/auth/guards";
 import { borrowRequestUpdateSchema } from "@/lib/validations/borrow";
-import { successResponse, errorResponse, validationErrorResponse, notFoundResponse } from "@/lib/api/response";
+import { successResponse, errorResponse, validationErrorResponse, notFoundResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
+import { notifyRequesterBorrowDecision } from "@/lib/sms/notifications";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = borrowRequestUpdateSchema.parse(body);
@@ -20,6 +25,11 @@ export async function PUT(
       where: eq(borrowRequests.id, id),
       with: {
         user: true,
+        unit: {
+          with: {
+            model: true,
+          },
+        },
       },
     });
 
@@ -36,6 +46,18 @@ export async function PUT(
     // Handle equipment unit status changes based on new status
     if (validatedData.status && validatedData.status !== existing.status) {
       if (validatedData.status === "accepted") {
+        const unit = await db.query.equipmentUnits.findFirst({
+          where: eq(equipmentUnits.id, existing.unitId),
+        });
+
+        if (!unit) {
+          return notFoundResponse("Equipment unit");
+        }
+
+        if (unit.status !== "available" && existing.status !== "accepted") {
+          return conflictResponse("This equipment unit is no longer available");
+        }
+
         await db
           .update(equipmentUnits)
           .set({ status: "on-loan" })
@@ -65,6 +87,24 @@ export async function PUT(
           detail: `Borrow request by "${requesterName}" was ${validatedData.status}`,
         });
       }
+
+      // Send SMS notification to requester on accept/reject
+      if (validatedData.status === "accepted" || validatedData.status === "rejected") {
+        try {
+          const requesterPhone = existing.user?.phoneNumber;
+          const modelName = existing.unit?.model?.modelName ?? existing.unit?.unitId ?? "equipment";
+          if (requesterPhone) {
+            await notifyRequesterBorrowDecision(
+              requesterPhone,
+              validatedData.status,
+              modelName,
+              validatedData.status === "rejected" ? validatedData.adminNotes : undefined,
+            );
+          }
+        } catch (smsError) {
+          console.error("[SMS] Failed to notify requester about borrow decision:", smsError);
+        }
+      }
     }
 
     // Fetch the updated data with relations
@@ -74,7 +114,11 @@ export async function PUT(
         user: true,
         unit: {
           with: {
-            model: true,
+            model: {
+              with: {
+                category: true,
+              },
+            },
           },
         },
       },

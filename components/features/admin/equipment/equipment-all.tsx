@@ -40,7 +40,7 @@ export default function EquipmentAll() {
   const filtered = units.filter(row => {
     const modelName = row.model?.modelName ?? "";
     const categoryName = row.model?.category?.name ?? "";
-    const matchSearch = [modelName, row.unitId, row.notes]
+    const matchSearch = [modelName, categoryName, row.unitId, row.notes]
       .some(v => v.toLowerCase().includes(search.toLowerCase()));
     const matchCat = category === "all" || row.model?.category?.id === category;
     const matchStatus = status === "all" || row.status === status;

@@ -17,7 +17,6 @@ import { useBorrowRequests } from "@/hooks/useBorrowRequests";
 import { useRoomReservations } from "@/hooks/useRoomReservations";
 import { useEquipmentUnitsWithModel } from "@/hooks/useEquipment";
 import { useActivityLog } from "@/hooks/useAdmin";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function Dashboard({ onNavigate }: { onNavigate?: (section: string) => void }) {
   const { requests: pendingBorrows, loading: loadingPB } = useBorrowRequests("pending");

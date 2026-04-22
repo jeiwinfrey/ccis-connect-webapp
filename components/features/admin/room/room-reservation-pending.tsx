@@ -77,10 +77,18 @@ export default function RoomReservationPending() {
   }
 
   function formatDuration(start: string, end: string) {
-    const [sh] = start.split(":").map(Number);
-    const [eh] = end.split(":").map(Number);
-    const diff = eh - sh;
-    return diff === 1 ? "1 hour" : `${diff} hours`;
+    const [startHour, startMinute] = start.split(":").map(Number);
+    const [endHour, endMinute] = end.split(":").map(Number);
+    const totalMinutes = (endHour * 60 + endMinute) - (startHour * 60 + startMinute);
+
+    if (totalMinutes <= 0) return "0 minutes";
+    if (totalMinutes < 60) return `${totalMinutes} minutes`;
+
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const hourLabel = hours === 1 ? "1 hour" : `${hours} hours`;
+
+    return minutes === 0 ? hourLabel : `${hourLabel} ${minutes} minutes`;
   }
 
   return (
@@ -219,7 +227,7 @@ export default function RoomReservationPending() {
                   </div>
                   <StatusBadge status={selected.status} />
                 </div>
-                <p className="text-xs text-muted-foreground">{selected.user?.email ?? ""}</p>
+                <p className="text-xs text-muted-foreground">{selected.user?.phoneNumber ?? ""}</p>
               </div>
 
               {/* Room */}

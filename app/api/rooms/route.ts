@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db, rooms, activityLog } from "@/lib/db";
 import { asc } from "drizzle-orm";
 import { getSessionUserId } from "@/lib/auth/session";
+import { requireAdmin, requireUser } from "@/lib/auth/guards";
 import { roomSchema } from "@/lib/validations/room";
 import { successResponse, errorResponse, validationErrorResponse, conflictResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
@@ -18,6 +19,9 @@ function isUniqueViolation(err: unknown): boolean {
 // GET /api/rooms — list all rooms
 export async function GET() {
   try {
+    const auth = await requireUser();
+    if (!auth.ok) return auth.response;
+
     const data = await db
       .select()
       .from(rooms)
@@ -32,6 +36,9 @@ export async function GET() {
 // POST /api/rooms — create a new room
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const validatedData = roomSchema.parse(body);
 

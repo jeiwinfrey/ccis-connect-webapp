@@ -30,6 +30,24 @@ interface BorrowFormDialogProps {
   onRequestComplete?: () => void;
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateValueToTime(date: string): number | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(year, month - 1, day).getTime();
+}
+
+function getTodayDate(): string {
+  return formatLocalDate(new Date());
+}
+
 export function BorrowFormDialog({
   item,
   unit,
@@ -42,22 +60,37 @@ export function BorrowFormDialog({
 }: BorrowFormDialogProps) {
   const { user } = useAuth();
   const mutations = useBorrowMutations();
-  const [borrowDate, setBorrowDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
+  const [borrowDate, setBorrowDate] = useState(getTodayDate);
+  const [returnDate, setReturnDate] = useState(getTodayDate);
   const [purpose, setPurpose] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   if (!item || !unit) return null;
 
   // Get today's date in YYYY-MM-DD format for min date validation
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayDate();
 
   // Validate dates - allow same day borrowing and return
-  const isValidDates = borrowDate && returnDate && returnDate >= borrowDate;
+  const borrowDateTime = dateValueToTime(borrowDate);
+  const returnDateTime = dateValueToTime(returnDate);
+  const todayTime = dateValueToTime(today);
+  const isValidDates =
+    borrowDateTime != null &&
+    returnDateTime != null &&
+    todayTime != null &&
+    borrowDateTime >= todayTime &&
+    returnDateTime >= borrowDateTime;
+  const dateError =
+    borrowDate && returnDate && returnDateTime != null && borrowDateTime != null && returnDateTime < borrowDateTime
+      ? "Return date must be the same day or after the borrow date."
+      : borrowDate && borrowDateTime != null && todayTime != null && borrowDateTime < todayTime
+        ? "Borrow date cannot be in the past."
+        : null;
 
   function resetForm() {
-    setBorrowDate("");
-    setReturnDate("");
+    const resetDate = getTodayDate();
+    setBorrowDate(resetDate);
+    setReturnDate(resetDate);
     setPurpose("");
     setSubmitted(false);
   }
@@ -75,7 +108,7 @@ export function BorrowFormDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!borrowDate || !returnDate || !purpose.trim() || !user) return;
+    if (!isValidDates || !purpose.trim() || !user) return;
 
     try {
       await mutations.createBorrowRequest({
@@ -88,7 +121,7 @@ export function BorrowFormDialog({
       setSubmitted(true);
     } catch (err) {
       console.error("Failed to submit borrow request:", err);
-      toast.error("Failed to submit borrow request");
+      toast.error(err instanceof Error ? err.message : "Failed to submit borrow request");
     }
   }
 
@@ -150,7 +183,14 @@ export function BorrowFormDialog({
                 id="borrow-date"
                 type="date"
                 value={borrowDate}
-                onChange={(e) => setBorrowDate(e.target.value)}
+                onChange={(e) => {
+                  const nextBorrowDate = e.target.value;
+                  setBorrowDate(nextBorrowDate);
+
+                  if (returnDate && returnDate < nextBorrowDate) {
+                    setReturnDate(nextBorrowDate);
+                  }
+                }}
                 min={today}
                 required
               />
@@ -169,6 +209,12 @@ export function BorrowFormDialog({
               />
             </div>
           </div>
+          {dateError && (
+            <p className="text-xs font-medium text-destructive">{dateError}</p>
+          )}
+          {!dateError && isValidDates && !purpose.trim() && (
+            <p className="text-xs text-muted-foreground">Add a purpose to submit this borrow request.</p>
+          )}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="borrow-purpose" className="text-sm font-semibold">

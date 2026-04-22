@@ -20,7 +20,7 @@ export async function setSession(userId: string, role: string) {
   });
 
   cookieStore.set("ccis_role", role, {
-    httpOnly: false,
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
@@ -40,7 +40,7 @@ export async function clearSession() {
   });
 
   cookieStore.set("ccis_role", "", {
-    httpOnly: false,
+    httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",

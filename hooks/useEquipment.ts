@@ -6,7 +6,6 @@ import type {
   EquipmentModel,
   EquipmentUnit,
   EquipmentCategoryWithModels,
-  EquipmentModelWithUnits,
 } from "@/lib/db/types";
 
 export type { EquipmentCategory, EquipmentModel, EquipmentUnit };

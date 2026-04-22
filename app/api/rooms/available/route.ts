@@ -1,12 +1,16 @@
 import { NextRequest } from "next/server";
 import { db, rooms, roomAvailability, roomReservations } from "@/lib/db";
 import { eq, and, lte, gte, lt, gt, inArray, asc } from "drizzle-orm";
+import { requireUser } from "@/lib/auth/guards";
 import { successResponse, errorResponse, badRequestResponse } from "@/lib/api/response";
 
 // GET /api/rooms/available?date=YYYY-MM-DD&start_time=HH:MM&end_time=HH:MM
 // Returns rooms that are available on the given date and time range.
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireUser();
+    if (!auth.ok) return auth.response;
+
     const searchParams = request.nextUrl.searchParams;
     const date = searchParams.get("date");
     const startTime = searchParams.get("start_time");
@@ -32,15 +36,15 @@ export async function GET(request: NextRequest) {
     const dayOfWeek = new Date(date + "T00:00:00").getDay();
 
     // Parse requested hours for comparison with room_availability.
-    const [startHourStr] = startTime.split(":");
+    const [startHourStr, startMinStr] = startTime.split(":");
     const [endHourStr, endMinStr] = endTime.split(":");
 
-    const effectiveStartHour = parseInt(startHourStr, 10);
-    const endHour = parseInt(endHourStr, 10);
-    const endMin = parseInt(endMinStr, 10);
+    const effectiveStartHour = parseInt(startHourStr, 10) + parseInt(startMinStr, 10) / 60;
+    const effectiveEndHour = parseInt(endHourStr, 10) + parseInt(endMinStr, 10) / 60;
 
-    // If end time has minutes (e.g., 14:30), the room must be available through hour 15
-    const effectiveEndHour = endMin > 0 ? endHour + 1 : endHour;
+    if (effectiveStartHour >= effectiveEndHour) {
+      return badRequestResponse("end_time must be after start_time");
+    }
 
     // Step 1: Find rooms that have availability on this day_of_week
     // covering the requested time range.
@@ -63,14 +67,14 @@ export async function GET(request: NextRequest) {
       ...new Set(availableSlots.map((slot) => slot.roomId)),
     ];
 
-    // Step 2: Find accepted reservations that conflict with the requested time.
+    // Step 2: Find accepted or pending reservations that conflict with the requested time.
     const conflictingReservations = await db
       .select({ roomId: roomReservations.roomId })
       .from(roomReservations)
       .where(
         and(
           eq(roomReservations.reservationDate, date),
-          eq(roomReservations.status, "accepted"),
+          inArray(roomReservations.status, ["accepted", "pending"]),
           inArray(roomReservations.roomId, availableRoomIds),
           lt(roomReservations.startTime, endTime),
           gt(roomReservations.endTime, startTime)

@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { db, users } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { setSession } from "@/lib/auth/session";
+import { toSafeUser } from "@/lib/auth/guards";
 import { loginSchema } from "@/lib/validations/user";
-import { successResponse, errorResponse, validationErrorResponse, unauthorizedResponse } from "@/lib/api/response";
+import { errorResponse, validationErrorResponse, unauthorizedResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
 
 export async function POST(request: Request) {
@@ -31,9 +32,7 @@ export async function POST(request: Request) {
     // Set session cookies
     await setSession(user.id, user.role);
 
-    // Return user data without passwordHash
-    const { passwordHash: _, ...safeUser } = user;
-    return successResponse(safeUser);
+    return NextResponse.json(toSafeUser(user));
   } catch (error) {
     if (error instanceof ZodError) {
       return validationErrorResponse(error);

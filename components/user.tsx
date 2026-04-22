@@ -11,6 +11,7 @@ import {
   IconCalendar,
   IconClock,
   IconCheck,
+  IconX,
   IconArrowRight,
   IconLoader2,
 } from "@tabler/icons-react";
@@ -50,22 +51,28 @@ export default function User() {
   ];
 
   const borrowHistory = allBorrows
-    .filter((r) => r.status === "accepted" || r.status === "returned")
+    .filter((r) => r.status !== "pending")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .map((r) => ({
+      id: r.id,
       equipment: r.unit?.model?.modelName ?? "Equipment",
       unitId: r.unit?.unitId ?? "",
       dates: formatDateRange(r.startDate, r.endDate),
-      status: r.status === "accepted" ? ("active" as const) : ("returned" as const),
+      status: r.status,
+      note: r.adminNotes?.trim() || null,
     }));
 
   const roomHistory = allReservations
-    .filter((r) => r.status === "accepted")
+    .filter((r) => r.status !== "pending")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .map((r) => ({
+      id: r.id,
       room: r.room?.name ?? "Room",
       roomNumber: r.room?.roomNumber ?? "",
       date: formatShort(r.reservationDate),
       time: `${formatTime(r.startTime)} - ${formatTime(r.endTime)}`,
-      status: "confirmed" as const,
+      status: r.status,
+      note: r.adminNotes?.trim() || null,
     }));
 
   const loading = authLoading || borrowLoading || resLoading;
@@ -202,22 +209,33 @@ export default function User() {
                     </div>
                   ) : (
                     <div className="divide-y divide-border -mx-6">
-                      {borrowHistory.map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 px-6 py-3">
+                      {borrowHistory.map((item) => (
+                        <div key={item.id} className="flex items-start gap-3 px-6 py-3">
                           <div className="rounded-lg p-1.5 text-blue-600 bg-blue-50">
                             <IconBook className="size-3.5" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground">{item.equipment}</p>
                             <p className="text-xs text-muted-foreground">{item.unitId} &middot; {item.dates}</p>
+                            {item.status === "rejected" && item.note && (
+                              <p className="mt-1 text-xs text-destructive">Reason: {item.note}</p>
+                            )}
                           </div>
-                          <Badge variant="outline" className={`text-xs ${
-                            item.status === "active"
+                          <Badge variant="outline" className={`shrink-0 text-xs ${
+                            item.status === "accepted"
                               ? "text-blue-600 border-blue-300 bg-blue-50"
-                              : "text-emerald-600 border-emerald-300 bg-emerald-50"
+                              : item.status === "returned"
+                                ? "text-emerald-600 border-emerald-300 bg-emerald-50"
+                                : "text-red-600 border-red-300 bg-red-50"
                           }`}>
-                            {item.status === "active" ? <IconClock className="size-3 mr-0.5" /> : <IconCheck className="size-3 mr-0.5" />}
-                            {item.status === "active" ? "Active" : "Returned"}
+                            {item.status === "accepted" ? (
+                              <IconClock className="size-3 mr-0.5" />
+                            ) : item.status === "returned" ? (
+                              <IconCheck className="size-3 mr-0.5" />
+                            ) : (
+                              <IconX className="size-3 mr-0.5" />
+                            )}
+                            {item.status === "accepted" ? "Active" : item.status === "returned" ? "Returned" : "Rejected"}
                           </Badge>
                         </div>
                       ))}
@@ -236,18 +254,29 @@ export default function User() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="divide-y divide-border -mx-6">
-                  {roomHistory.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 px-6 py-3">
+                  {roomHistory.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3 px-6 py-3">
                       <div className="rounded-lg p-1.5 text-violet-600 bg-violet-50">
                         <IconCalendar className="size-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">{item.room}</p>
                         <p className="text-xs text-muted-foreground">{item.roomNumber} &middot; {item.date} &middot; {item.time}</p>
+                        {item.status === "rejected" && item.note && (
+                          <p className="mt-1 text-xs text-destructive">Reason: {item.note}</p>
+                        )}
                       </div>
-                      <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300 bg-emerald-50">
-                        <IconCheck className="size-3 mr-0.5" />
-                        Confirmed
+                      <Badge variant="outline" className={`shrink-0 text-xs ${
+                        item.status === "accepted"
+                          ? "text-emerald-600 border-emerald-300 bg-emerald-50"
+                          : "text-red-600 border-red-300 bg-red-50"
+                      }`}>
+                        {item.status === "accepted" ? (
+                          <IconCheck className="size-3 mr-0.5" />
+                        ) : (
+                          <IconX className="size-3 mr-0.5" />
+                        )}
+                        {item.status === "accepted" ? "Confirmed" : "Rejected"}
                       </Badge>
                     </div>
                   ))}
@@ -267,8 +296,8 @@ export default function User() {
 // ---------------------------------------------------------------------------
 
 function formatDateRange(start: string, end: string): string {
-  const s = new Date(start);
-  const e = new Date(end);
+  const s = parseLocalDate(start);
+  const e = parseLocalDate(end);
   const fmt = (d: Date) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   if (s.getTime() === e.getTime()) return fmt(s);
@@ -276,10 +305,19 @@ function formatDateRange(start: string, end: string): string {
 }
 
 function formatShort(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return parseLocalDate(dateStr).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
   });
 }
 
+function parseLocalDate(dateStr: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateStr);
 
+  if (!match) {
+    return new Date(dateStr);
+  }
+
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+}

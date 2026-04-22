@@ -39,7 +39,7 @@ export type EquipmentUnitUpdate = Partial<Omit<EquipmentUnitInsert, "id" | "crea
 export type RoomUpdate = Partial<Omit<RoomInsert, "id" | "createdAt">>;
 export type RoomReservationUpdate = Partial<Pick<RoomReservation, "status" | "adminNotes">>;
 export type BorrowRequestUpdate = Partial<Pick<BorrowRequest, "status" | "adminNotes">>;
-export type UserUpdate = Partial<Omit<UserInsert, "email" | "id" | "createdAt">>;
+export type UserUpdate = Partial<Omit<UserInsert, "phoneNumber" | "id" | "createdAt">>;
 
 // ---------------------------------------------------------------------------
 // Safe User type (without password)
@@ -52,7 +52,9 @@ export type SafeUser = Omit<User, "passwordHash">;
 // ---------------------------------------------------------------------------
 
 export type EquipmentUnitWithModel = EquipmentUnit & {
-  model: EquipmentModel;
+  model: EquipmentModel & {
+    category: EquipmentCategory;
+  };
 };
 
 export type EquipmentModelWithUnits = EquipmentModel & {

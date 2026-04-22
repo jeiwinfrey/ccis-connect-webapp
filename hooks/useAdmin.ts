@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { User, ActivityLog } from "@/lib/db/types";
+import type { SafeUser, User, ActivityLog } from "@/lib/db/types";
 
 // ---------------------------------------------------------------------------
 // Admin users
 // ---------------------------------------------------------------------------
 
 export function useAdminUsers() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<SafeUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +37,7 @@ export function useAdminUsers() {
 // ---------------------------------------------------------------------------
 
 export function useUsers(role?: string) {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<SafeUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,7 +99,15 @@ export function useActivityLog(limit?: number) {
 export function useAdminMutations() {
   const [loading, setLoading] = useState(false);
 
-  async function createUser(data: { name: string; email: string; role: string; department: string; studentId?: string }) {
+  async function createUser(data: {
+    name: string;
+    phoneNumber: string;
+    role: string;
+    department: string;
+    studentId?: string | null;
+    username?: string | null;
+    passwordHash?: string | null;
+  }) {
     setLoading(true);
     try {
       const res = await window.fetch("/api/admin/users", {
@@ -108,11 +116,11 @@ export function useAdminMutations() {
         body: JSON.stringify(data),
       });
       if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Failed"); }
-      return (await res.json()).data as User;
+      return (await res.json()).data as SafeUser;
     } finally { setLoading(false); }
   }
 
-  async function updateUser(id: string, data: Partial<{ name: string; role: string; department: string }>) {
+  async function updateUser(id: string, data: Partial<{ name: string; role: string; department: string; username: string | null }>) {
     setLoading(true);
     try {
       const res = await window.fetch(`/api/admin/users/${id}`, {
@@ -121,7 +129,7 @@ export function useAdminMutations() {
         body: JSON.stringify(data),
       });
       if (!res.ok) { const j = await res.json(); throw new Error(j.error || "Failed"); }
-      return (await res.json()).data as User;
+      return (await res.json()).data as SafeUser;
     } finally { setLoading(false); }
   }
 

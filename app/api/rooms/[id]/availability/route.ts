@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db, roomAvailability } from "@/lib/db";
 import { eq, asc } from "drizzle-orm";
+import { requireAdmin, requireUser } from "@/lib/auth/guards";
 import { roomAvailabilityBatchSchema } from "@/lib/validations/room";
 import { successResponse, errorResponse, validationErrorResponse } from "@/lib/api/response";
 import { ZodError } from "zod";
@@ -12,6 +13,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireUser();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
 
     const data = await db
@@ -33,6 +37,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
+
     const { id } = await params;
     const body = await request.json();
     const validatedData = roomAvailabilityBatchSchema.parse(body);

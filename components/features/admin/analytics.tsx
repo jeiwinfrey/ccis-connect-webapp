@@ -46,6 +46,10 @@ const roomChartConfig = {
   reservations: { label: "Reservations", color: "hsl(270, 70%, 60%)" },
 } satisfies ChartConfig;
 
+const borrowCategoryChartConfig = {
+  borrows: { label: "Borrow Requests", color: "hsl(217, 91%, 60%)" },
+} satisfies ChartConfig;
+
 const equipmentChartConfig = {
   available: { label: "Available", color: "hsl(142, 71%, 45%)" },
   "on-loan": { label: "On Loan", color: "hsl(217, 91%, 60%)" },
@@ -117,6 +121,22 @@ export default function Analytics() {
       .sort((a, b) => b.reservations - a.reservations)
       .slice(0, 8);
   }, [reservations]);
+
+  // --- Equipment Borrowing by Category (Bar) ---
+  const borrowCategoryData = useMemo(() => {
+    const categoryCounts: Record<string, { category: string; borrows: number }> = {};
+    borrows.forEach((b) => {
+      const category = b.unit?.model?.category?.name ?? "Other";
+      if (!categoryCounts[category]) {
+        categoryCounts[category] = { category, borrows: 0 };
+      }
+      categoryCounts[category].borrows++;
+    });
+
+    return Object.values(categoryCounts)
+      .sort((a, b) => b.borrows - a.borrows)
+      .slice(0, 8);
+  }, [borrows]);
 
   // --- Equipment Status (Bar) ---
   const equipmentData = useMemo(() => {
@@ -274,6 +294,40 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
+        {/* Equipment Borrowing by Category */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Equipment Borrowing by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {borrowCategoryData.length === 0 ? (
+              <div className="flex items-center justify-center h-[280px] text-sm text-muted-foreground">
+                No equipment borrowing data yet.
+              </div>
+            ) : (
+              <ChartContainer config={borrowCategoryChartConfig} className="h-[280px] w-full">
+                <BarChart data={borrowCategoryData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" tickLine={false} axisLine={false} allowDecimals={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="category"
+                    tickLine={false}
+                    axisLine={false}
+                    width={100}
+                    className="text-[10px]"
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="borrows" fill="var(--color-borrows)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts row 3 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Equipment by Category & Status */}
         <Card>
           <CardHeader className="pb-2">
