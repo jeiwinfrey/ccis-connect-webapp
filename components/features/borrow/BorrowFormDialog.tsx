@@ -44,6 +44,10 @@ function dateValueToTime(date: string): number | null {
   return new Date(year, month - 1, day).getTime();
 }
 
+function getTodayDate(): string {
+  return formatLocalDate(new Date());
+}
+
 export function BorrowFormDialog({
   item,
   unit,
@@ -56,15 +60,15 @@ export function BorrowFormDialog({
 }: BorrowFormDialogProps) {
   const { user } = useAuth();
   const mutations = useBorrowMutations();
-  const [borrowDate, setBorrowDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
+  const [borrowDate, setBorrowDate] = useState(getTodayDate);
+  const [returnDate, setReturnDate] = useState(getTodayDate);
   const [purpose, setPurpose] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   if (!item || !unit) return null;
 
   // Get today's date in YYYY-MM-DD format for min date validation
-  const today = formatLocalDate(new Date());
+  const today = getTodayDate();
 
   // Validate dates - allow same day borrowing and return
   const borrowDateTime = dateValueToTime(borrowDate);
@@ -84,8 +88,9 @@ export function BorrowFormDialog({
         : null;
 
   function resetForm() {
-    setBorrowDate("");
-    setReturnDate("");
+    const resetDate = getTodayDate();
+    setBorrowDate(resetDate);
+    setReturnDate(resetDate);
     setPurpose("");
     setSubmitted(false);
   }
@@ -206,6 +211,9 @@ export function BorrowFormDialog({
           </div>
           {dateError && (
             <p className="text-xs font-medium text-destructive">{dateError}</p>
+          )}
+          {!dateError && isValidDates && !purpose.trim() && (
+            <p className="text-xs text-muted-foreground">Add a purpose to submit this borrow request.</p>
           )}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
