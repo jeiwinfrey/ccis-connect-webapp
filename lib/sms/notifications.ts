@@ -84,10 +84,11 @@ export async function notifyRequesterBorrowDecision(
 export async function notifyRequesterRoomDecision(
   phoneNumber: string,
   status: "accepted" | "rejected",
-  roomName: string
+  roomName: string,
+  reason?: string | null,
 ): Promise<void> {
   try {
-    const content = formatRoomDecisionNotification(status, roomName);
+    const content = formatRoomDecisionNotification(status, roomName, reason);
     await sendSms({ recipient: phoneNumber, content });
   } catch (error) {
     console.error("[SMS] Failed to notify requester about room decision:", error);

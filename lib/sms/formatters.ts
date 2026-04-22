@@ -28,9 +28,16 @@ export function formatBorrowDecisionNotification(
 
 export function formatRoomDecisionNotification(
   status: "accepted" | "rejected",
-  roomName: string
+  roomName: string,
+  reason?: string | null,
 ): string {
-  return status === "accepted"
-    ? `Your room reservation for ${roomName} has been accepted.`
+  if (status === "accepted") {
+    return `Your room reservation for ${roomName} has been accepted.`;
+  }
+
+  const trimmedReason = reason?.trim();
+
+  return trimmedReason
+    ? `Your room reservation for ${roomName} has been rejected. Reason: ${trimmedReason}`
     : `Your room reservation for ${roomName} has been rejected.`;
 }

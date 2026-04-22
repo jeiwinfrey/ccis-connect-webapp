@@ -77,7 +77,12 @@ export async function PUT(
           const requesterPhone = existing.user?.phoneNumber;
           const roomName = existing.room?.name ?? "unknown room";
           if (requesterPhone) {
-            await notifyRequesterRoomDecision(requesterPhone, validatedData.status, roomName);
+            await notifyRequesterRoomDecision(
+              requesterPhone,
+              validatedData.status,
+              roomName,
+              validatedData.status === "rejected" ? validatedData.adminNotes : undefined,
+            );
           }
         } catch (smsError) {
           console.error("[SMS] Failed to notify requester about room decision:", smsError);
