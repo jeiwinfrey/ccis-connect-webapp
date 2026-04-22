@@ -20,7 +20,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   value,
   onChange,
-  label = "Image URL",
+  label = "Image URL (Search in browser images then copy image address)",
 }: ImageUploadProps) {
   const [preview, setPreview] = useState(value);
 
