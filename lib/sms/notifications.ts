@@ -26,11 +26,11 @@ async function getAdminPhoneNumbers(): Promise<string[]> {
  */
 export async function notifyAdminsNewBorrow(
   requesterName: string,
-  unitId: string
+  modelName: string
 ): Promise<void> {
   try {
     const phoneNumbers = await getAdminPhoneNumbers();
-    const content = formatBorrowRequestAdminNotification(requesterName, unitId);
+    const content = formatBorrowRequestAdminNotification(requesterName, modelName);
 
     for (const recipient of phoneNumbers) {
       await sendSms({ recipient, content });

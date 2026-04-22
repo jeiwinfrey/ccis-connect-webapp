@@ -129,7 +129,8 @@ export async function POST(request: NextRequest) {
     // Fire-and-forget SMS notification to admins
     try {
       const requesterName = completeData?.user?.name ?? "Unknown";
-      notifyAdminsNewBorrow(requesterName, validatedData.unitId).catch((err) => {
+      const modelName = completeData?.unit?.model?.modelName ?? unit.unitId;
+      notifyAdminsNewBorrow(requesterName, modelName).catch((err) => {
         console.error("[SMS] Failed to notify admins about new borrow request:", err);
       });
     } catch (smsError) {

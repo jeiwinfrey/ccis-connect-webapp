@@ -9,9 +9,9 @@ function withSignature(message: string): string {
 
 export function formatBorrowRequestAdminNotification(
   requesterName: string,
-  unitId: string
+  modelName: string
 ): string {
-  return withSignature(`New borrow request from ${requesterName} for unit ${unitId}.\nPlease review.`);
+  return withSignature(`New borrow request from ${requesterName} for ${modelName}.\nPlease review.`);
 }
 
 export function formatRoomReservationAdminNotification(
