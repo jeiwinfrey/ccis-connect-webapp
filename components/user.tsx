@@ -63,13 +63,16 @@ export default function User() {
     }));
 
   const roomHistory = allReservations
-    .filter((r) => r.status === "accepted")
+    .filter((r) => r.status !== "pending")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .map((r) => ({
+      id: r.id,
       room: r.room?.name ?? "Room",
       roomNumber: r.room?.roomNumber ?? "",
       date: formatShort(r.reservationDate),
       time: `${formatTime(r.startTime)} - ${formatTime(r.endTime)}`,
-      status: "confirmed" as const,
+      status: r.status,
+      note: r.adminNotes?.trim() || null,
     }));
 
   const loading = authLoading || borrowLoading || resLoading;
@@ -251,18 +254,29 @@ export default function User() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="divide-y divide-border -mx-6">
-                  {roomHistory.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 px-6 py-3">
+                  {roomHistory.map((item) => (
+                    <div key={item.id} className="flex items-start gap-3 px-6 py-3">
                       <div className="rounded-lg p-1.5 text-violet-600 bg-violet-50">
                         <IconCalendar className="size-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground">{item.room}</p>
                         <p className="text-xs text-muted-foreground">{item.roomNumber} &middot; {item.date} &middot; {item.time}</p>
+                        {item.status === "rejected" && item.note && (
+                          <p className="mt-1 text-xs text-destructive">Reason: {item.note}</p>
+                        )}
                       </div>
-                      <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300 bg-emerald-50">
-                        <IconCheck className="size-3 mr-0.5" />
-                        Confirmed
+                      <Badge variant="outline" className={`shrink-0 text-xs ${
+                        item.status === "accepted"
+                          ? "text-emerald-600 border-emerald-300 bg-emerald-50"
+                          : "text-red-600 border-red-300 bg-red-50"
+                      }`}>
+                        {item.status === "accepted" ? (
+                          <IconCheck className="size-3 mr-0.5" />
+                        ) : (
+                          <IconX className="size-3 mr-0.5" />
+                        )}
+                        {item.status === "accepted" ? "Confirmed" : "Rejected"}
                       </Badge>
                     </div>
                   ))}
