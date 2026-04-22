@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,18 +42,25 @@ const DAYS_OF_WEEK = [
 function getNextDateForDay(dayOfWeek: number): string {
   const today = new Date();
   const currentDay = today.getDay();
-  
+
   // If selecting today, return today's date
   if (dayOfWeek === currentDay) {
-    return today.toISOString().split("T")[0];
+    return formatLocalDate(today);
   }
-  
+
   // Otherwise get next occurrence
   let daysToAdd = dayOfWeek - currentDay;
   if (daysToAdd <= 0) daysToAdd += 7;
   const targetDate = new Date(today);
   targetDate.setDate(today.getDate() + daysToAdd);
-  return targetDate.toISOString().split("T")[0];
+  return formatLocalDate(targetDate);
+}
+
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function getCurrentTimeInHours(): number {
@@ -152,7 +159,7 @@ function getAvailableEndTimes(
 
 function formatTime(hour: number): string {
   const h = Math.floor(hour);
-  const m = (hour % 1) * 60;
+  const m = Math.round((hour % 1) * 60);
   const ampm = h >= 12 ? "PM" : "AM";
   const h12 = h % 12 || 12;
   return m === 0 ? `${h12}:00 ${ampm}` : `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
@@ -175,6 +182,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   const [startTime, setStartTime] = useState<number | null>(null);
   const [endTime, setEndTime] = useState<number | null>(null);
   const [purpose, setPurpose] = useState("");
+  const [availabilityCheck, setAvailabilityCheck] = useState<"idle" | "checking" | "available" | "unavailable">("idle");
 
   // Fetch existing reservations for this room
   const targetDate = dayOfWeek != null ? getNextDateForDay(dayOfWeek) : "";
@@ -183,12 +191,61 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
   // Filter reservations for this specific room
   const roomReservations = existingReservations.filter(r => r.roomId === room?.id);
 
+  useEffect(() => {
+    if (!room || dayOfWeek == null || startTime == null || endTime == null) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const selectedRoomId = room.id;
+    const selectedDate = getNextDateForDay(dayOfWeek);
+    const selectedStartTime = toTimeString(startTime);
+    const selectedEndTime = toTimeString(endTime);
+
+    async function checkServerAvailability() {
+      setAvailabilityCheck("checking");
+
+      try {
+        const params = new URLSearchParams({
+          date: selectedDate,
+          start_time: selectedStartTime,
+          end_time: selectedEndTime,
+        });
+        const res = await window.fetch(`/api/rooms/available?${params}`, {
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          setAvailabilityCheck("unavailable");
+          return;
+        }
+
+        const json = await res.json();
+        const availableRooms = Array.isArray(json) ? json : json.data ?? [];
+        setAvailabilityCheck(
+          availableRooms.some((availableRoom: { id: string }) => availableRoom.id === selectedRoomId)
+            ? "available"
+            : "unavailable",
+        );
+      } catch (error) {
+        if ((error as DOMException).name !== "AbortError") {
+          setAvailabilityCheck("unavailable");
+        }
+      }
+    }
+
+    void checkServerAvailability();
+
+    return () => controller.abort();
+  }, [dayOfWeek, endTime, room, startTime]);
+
   function resetForm() {
     setStep("info");
     setDayOfWeek(null);
     setStartTime(null);
     setEndTime(null);
     setPurpose("");
+    setAvailabilityCheck("idle");
   }
 
   function handleClose() {
@@ -200,11 +257,13 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
     setDayOfWeek(Number(value));
     setStartTime(null);
     setEndTime(null);
+    setAvailabilityCheck("idle");
   }
 
   function handleStartTimeChange(value: string) {
     const time = Number(value);
     setStartTime(time);
+    setAvailabilityCheck("idle");
     
     // Auto-select next available 30-min slot as default
     const availableEnds = dayOfWeek != null ? getAvailableEndTimes(availability, dayOfWeek, time, roomReservations, targetDate) : [];
@@ -222,6 +281,11 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
     const reservationDate = getNextDateForDay(dayOfWeek);
 
     try {
+      if (availabilityCheck !== "available") {
+        toast.error("This room is not available for the selected schedule");
+        return;
+      }
+
       await mutations.createRoomReservation({
         roomId: room.id,
         userId: user.id,
@@ -233,7 +297,7 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
       setStep("confirmed");
     } catch (err) {
       console.error("Failed to submit reservation:", err);
-      toast.error("Failed to submit reservation");
+      toast.error(err instanceof Error ? err.message : "Failed to submit reservation");
     }
   }
 
@@ -346,7 +410,10 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                   </Label>
                   <Select
                     value={endTime != null ? String(endTime) : ""}
-                    onValueChange={(v) => setEndTime(Number(v))}
+                    onValueChange={(v) => {
+                      setEndTime(Number(v));
+                      setAvailabilityCheck("idle");
+                    }}
                     disabled={startTime == null}
                   >
                     <SelectTrigger>
@@ -360,6 +427,14 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
                   </Select>
                 </div>
               </div>
+              {availabilityCheck === "checking" && (
+                <p className="text-xs text-muted-foreground">Checking room availability...</p>
+              )}
+              {availabilityCheck === "unavailable" && (
+                <p className="text-xs font-medium text-destructive">
+                  This room is not available for the selected schedule.
+                </p>
+              )}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="res-purpose" className="text-sm font-semibold">
@@ -391,7 +466,14 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={mutations.loading || dayOfWeek == null || startTime == null || endTime == null || !purpose.trim()}
+                disabled={
+                  mutations.loading ||
+                  dayOfWeek == null ||
+                  startTime == null ||
+                  endTime == null ||
+                  availabilityCheck !== "available" ||
+                  !purpose.trim()
+                }
               >
                 {mutations.loading ? (
                   <>

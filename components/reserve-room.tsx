@@ -57,7 +57,7 @@ export default function ReserveRoom() {
     setSelectedRoom(null);
   }
 
-  function FloorContent({ rooms }: { rooms: Room[] }) {
+  function renderFloorContent(rooms: Room[]) {
     const filtered = applyTypeFilter(rooms);
     const { topRooms, bottomRooms } = splitRooms(filtered);
 
@@ -137,14 +137,14 @@ export default function ReserveRoom() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Floor Plan — 1st Floor
                   </p>
-                  <FloorContent rooms={floor1Rooms} />
+                  {renderFloorContent(floor1Rooms)}
                 </TabsContent>
 
                 <TabsContent value="floor2" className="mt-3">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Floor Plan — 2nd Floor
                   </p>
-                  <FloorContent rooms={floor2Rooms} />
+                  {renderFloorContent(floor2Rooms)}
                 </TabsContent>
               </Tabs>
             </>
