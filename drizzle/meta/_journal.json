@@ -15,6 +15,13 @@
       "when": 1776043247688,
       "tag": "0001_add_room_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776874748933,
+      "tag": "0002_productive_millenium_guard",
+      "breakpoints": true
     }
   ]
 }

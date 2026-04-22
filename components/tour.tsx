@@ -5,17 +5,7 @@ import { Switch } from "./ui/switch";
 import { Button } from "./ui/button";
 import Image from "next/image";
 
-type SceneId =
-  | "lobby"
-  | "dit-entrance"
-  | "cs-intersection-1st"
-  | "dct-entrance"
-  | "deans-office-entrance"
-  | "hyflex1-entrance"
-  | "DIT-intersection-1st"
-  | "100B-entrance"
-  | "IT-stairs"
-  | "100A-entrance";
+type SceneId = string;
 type ArrowDirection = "left" | "right" | "down" | "up";
 
 type SceneConfig = {
@@ -45,231 +35,6 @@ const TABLER_ARROW_SVGS: Record<ArrowDirection, string> = {
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="m18 13 -6 6"></path><path d="m6 13 6 6"></path></svg>',
 };
 
-const SCENES: Record<SceneId, SceneConfig> = {
-  "lobby": {
-    id: "lobby",
-    title: "Lobby",
-    panorama: "/panoramic-images/lobby.JPG",
-    startYaw: "-70deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-dit-entrance",
-        pitch: "-4deg",
-        yaw: "-30deg",
-        target: "dit-entrance",
-        label: "DIT Entrance",
-        arrow: "right",
-      },
-      {
-        id: "to-deans-office-entrance",
-        pitch: "-4deg",
-        yaw: "-110deg",
-        target: "deans-office-entrance",
-        label: "Dean's Office Entrance",
-        arrow: "left",
-      },
-    ],
-  },
-  "dit-entrance": {
-    id: "dit-entrance",
-    title: "DIT Entrance",
-    panorama: "/panoramic-images/DIT-entrance.JPG",
-    startYaw: "-70deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-hyflex1-entrance",
-        pitch: "-20deg",
-        yaw: "-70deg",
-        target: "hyflex1-entrance",
-        label: "Hyflex 1 Entrance",
-        arrow: "up",
-      },
-      {
-        id: "to-lobby",
-        pitch: "-14deg",
-        yaw: "70deg",
-        target: "lobby",
-        label: "Lobby",
-        arrow: "up",
-      },
-      {
-        id: "to-deans-office-entrance",
-        pitch: "-15deg",
-        yaw: "110deg",
-        target: "deans-office-entrance",
-        label: "Dean's Office Entrance",
-        arrow: "up",
-      },
-    ],
-  },
-  "cs-intersection-1st": {
-    id: "cs-intersection-1st",
-    title: "CS Intersection 1st",
-    panorama: "/panoramic-images/CS-intersection-1st.JPG",
-    startYaw: "0deg",
-    startPitch: "0deg",
-    arrows: [],
-  },
-  "deans-office-entrance": {
-    id: "deans-office-entrance",
-    title: "Dean's Office Entrance",
-    panorama: "/panoramic-images/deans-office-entrance.JPG",
-    startYaw: "-60deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-dct-entrance",
-        pitch: "-20deg",
-        yaw: "-60deg",
-        target: "dct-entrance",
-        label: "DCT Entrance",
-        arrow: "up",
-      },
-    ],
-  },
-  "dct-entrance": {
-    id: "dct-entrance",
-    title: "DCT Entrance",
-    panorama: "/panoramic-images/DCT-entrance.JPG",
-    startYaw: "-110deg",
-    startPitch: "0deg",
-    arrows: [{
-      id: "to-cs-intersection-1st",
-      pitch: "-20deg",
-      yaw: "-110deg",
-      target: "cs-intersection-1st",
-      label: "CS Intersection 1st",
-      arrow: "up",
-    }, {
-      id: "to-deans-office-entrance",
-      pitch: "-20deg",
-      yaw: "70deg",
-      target: "deans-office-entrance",
-      label: "Dean's Office Entrance",
-      arrow: "up",
-    }],
-  },
-  "hyflex1-entrance": {
-    id: "hyflex1-entrance",
-    title: "Hyflex 1 Entrance",
-    panorama: "/panoramic-images/hyflex1-entrance.JPG",
-    startYaw: "-150deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-dit-intersection-1st",
-        pitch: "-20deg",
-        yaw: "-150deg",
-        target: "DIT-intersection-1st",
-        label: "DIT Intersection 1st",
-        arrow: "up",
-      },
-      {
-        id: "to-dit-entrance",
-        pitch: "-20deg",
-        yaw: "30deg",
-        target: "dit-entrance",
-        label: "DIT Entrance",
-        arrow: "up",
-      },
-    ],
-  },
-  "DIT-intersection-1st": {
-    id: "DIT-intersection-1st",
-    title: "DIT Intersection 1st",
-    panorama: "/panoramic-images/IT-intersection-1st.JPG",
-    startYaw: "-100deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-100b-entrance",
-        pitch: "-14deg",
-        yaw: "-145deg",
-        target: "100B-entrance",
-        label: "100B Entrance",
-        arrow: "left",
-      },
-      {
-        id: "to-it-stairs",
-        pitch: "-14deg",
-        yaw: "-60deg",
-        target: "IT-stairs",
-        label: "IT Stairs",
-        arrow: "right",
-      },
-      {
-        id: "to-hyflex1-entrance",
-        pitch: "-20deg",
-        yaw: "90deg",
-        target: "hyflex1-entrance",
-        label: "Hyflex 1 Entrance",
-        arrow: "up",
-      },
-    ],
-  },
-  "100B-entrance": {
-    id: "100B-entrance",
-    title: "100B Entrance",
-    panorama: "/panoramic-images/100B-entrance.JPG",
-    startYaw: "-150deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-100a-entrance",
-        pitch: "-20deg",
-        yaw: "-150deg",
-        target: "100A-entrance",
-        label: "100A Entrance",
-        arrow: "up",
-      },
-      {
-        id: "to-it-intersection-1st",
-        pitch: "-20deg",
-        yaw: "30deg",
-        target: "DIT-intersection-1st",
-        label: "IT Intersection 1st",
-        arrow: "up",
-      },
-    ],
-  },
-  "100A-entrance": {
-    id: "100A-entrance",
-    title: "100A Entrance",
-    panorama: "/panoramic-images/100A-entrance.JPG",
-    startYaw: "-90deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-100b-entrance",
-        pitch: "-20deg",
-        yaw: "-90deg",
-        target: "100B-entrance",
-        label: "100B Entrance",
-        arrow: "up",
-      },
-    ],
-  },
-  "IT-stairs": {
-    id: "IT-stairs",
-    title: "IT Stairs",
-    panorama: "/panoramic-images/IT-stairs.JPG",
-    startYaw: "20deg",
-    startPitch: "0deg",
-    arrows: [
-      {
-        id: "to-it-intersection-1st-from-stairs",
-        pitch: "-30deg",
-        yaw: "-2deg",
-        target: "DIT-intersection-1st",
-        label: "IT Intersection 1st",
-        arrow: "up",
-      },
-    ],
-  },
-};
-
 export default function Tour() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewerRef = useRef<{ destroy: () => void } | null>(null);
@@ -277,9 +42,523 @@ export default function Tour() {
   const [loading, setLoading] = useState(true);
   const [is3D, setIs3D] = useState(true);
   const [selectedFloor, setSelectedFloor] = useState<"1st" | "2nd">("1st");
+  const [scenes, setScenes] = useState<Record<SceneId, SceneConfig>>({});
+  const [scenesLoading, setScenesLoading] = useState(true);
+
+  // Fetch scenes from API
+  useEffect(() => {
+    const fetchScenes = async () => {
+      try {
+        const response = await fetch("/api/virtual-tour/scenes");
+        if (!response.ok) {
+          // Fallback to hardcoded scenes for demonstration
+          console.log("API not available, using fallback scenes");
+          setScenes({
+            "lobby": {
+              id: "lobby",
+              title: "Lobby",
+              panorama: "/panoramic-images/lobby.JPG",
+              startYaw: "-70deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-dit-entrance",
+                  pitch: "-4deg",
+                  yaw: "-25deg",
+                  target: "dit-entrance",
+                  label: "DIT Entrance",
+                  arrow: "right",
+                },
+                {
+                  id: "to-deans-office",
+                  pitch: "-4deg",
+                  yaw: "-112deg",  
+                  target: "deans-office",
+                  label: "Dean's Office",
+                  arrow: "left",
+                },
+              ],
+            },
+            "dit-entrance": {
+              id: "dit-entrance",
+              title: "DIT Entrance",
+              panorama: "/panoramic-images/DIT-entrance.JPG",
+              startYaw: "-70deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-lobby",
+                  pitch: "-5deg",
+                  yaw: "70deg",
+                  target: "lobby",
+                  label: "Lobby",
+                  arrow: "left",
+                },
+                {
+                  id: "to-hyflex1-entrance",
+                  pitch: "-5deg",
+                  yaw: "-70deg",
+                  target: "hyflex1-entrance",
+                  label: "HyFlex 1 Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "hyflex1-entrance": {
+              id: "hyflex1-entrance",
+              title: "HyFlex 1 Entrance",
+              panorama: "/panoramic-images/hyflex1-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-hyflex1",
+                  pitch: "-5deg",
+                  yaw: "-60deg",
+                  target: "hyflex1",
+                  label: "HyFlex 1",
+                  arrow: "up",
+                },
+                {
+                  id: "to-dit-entrance",
+                  pitch: "-5deg",
+                  yaw: "30deg",
+                  target: "dit-entrance",
+                  label: "DIT Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-SC Office",
+                  pitch: "-5deg",
+                  yaw: "-150deg",
+                  target: "SC-Office",
+                  label: "SC Office",
+                  arrow: "up",
+                },
+              ],
+            },
+            "hyflex1": {
+              id: "hyflex1",
+              title: "HyFlex 1",
+              panorama: "/panoramic-images/hyflex1.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-hyflex1-entrance",
+                  pitch: "-5deg",
+                  yaw: "94deg",
+                  target: "hyflex1-entrance",
+                  label: "HyFlex 1 Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "SC-Office": {
+              id: "SC-Office",
+              title: "SC Office",
+              panorama: "/panoramic-images/IT-intersection-1st.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100B-entrance",
+                  pitch: "-5deg",
+                  yaw: "178deg",
+                  target: "100B-entrance",
+                  label: "100B Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-hyflex1-entrance",
+                  pitch: "-5deg",
+                  yaw: "88deg",
+                  target: "hyflex1-entrance",
+                  label: "HyFlex 1 Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100B-entrance": {
+              id: "100B-entrance",
+              title: "100B Entrance",
+              panorama: "/panoramic-images/100B-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-SC-Office",
+                  pitch: "-5deg",
+                  yaw: "27deg",
+                  target: "SC-Office",
+                  label: "SC Office",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100A-entrance",
+                  pitch: "-5deg",
+                  yaw: "210deg",
+                  target: "100A-entrance",
+                  label: "100A Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100B",
+                  pitch: "-5deg",
+                  yaw: "-60deg",
+                  target: "100B",
+                  label: "100B",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100B": {
+              id: "100B",
+              title: "100B",
+              panorama: "/panoramic-images/100B.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100B-entrance",
+                  pitch: "-5deg",
+                  yaw: "23deg",
+                  target: "100B-entrance",
+                  label: "100B Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100A-entrance": {
+              id: "100A-entrance",
+              title: "100A Entrance",
+              panorama: "/panoramic-images/100A-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100B-entrance",
+                  pitch: "-5deg",
+                  yaw: "-95deg",
+                  target: "100B-entrance",
+                  label: "100B Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100A",
+                  pitch: "-5deg",
+                  yaw: "180deg",
+                  target: "100A",
+                  label: "100A",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100A": {
+              id: "100A",
+              title: "100A",
+              panorama: "/panoramic-images/100A.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100A-entrance",
+                  pitch: "-5deg",
+                  yaw: "183deg",
+                  target: "100A-entrance",
+                  label: "100A Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "deans-office": {
+              id: "deans-office",
+              title: "Dean's Office",
+              panorama: "/panoramic-images/deans-office-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-lobby",
+                  pitch: "-5deg",
+                  yaw: "158deg",
+                  target: "lobby",
+                  label: "Back to Lobby",
+                  arrow: "right",
+                },
+                {
+                  id: "to-dcs-entrance",
+                  pitch: "-5deg",
+                  yaw: "-60deg",
+                  target: "dcs-entrance",
+                  label: "DCS Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "dcs-entrance": {
+              id: "dcs-entrance",
+              title: "DCS Entrance",
+              panorama: "/panoramic-images/DCS-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-deans-office",
+                  pitch: "-4deg",
+                  yaw: "72deg",
+                  target: "deans-office",
+                  label: "Dean's Office",
+                  arrow: "up",
+                },
+                {
+                  id: "to-CS-Soc-and-IT-Soc-Office",
+                  pitch: "-4deg",
+                  yaw: "253deg",
+                  target: "CS-Soc-and-IT-Soc-Office",
+                  label: "CS Soc and IT Soc Office",
+                  arrow: "up",
+                },
+              ],
+            },
+            "CS-Soc-and-IT-Soc-Office": {
+              id: "CS-Soc-and-IT-Soc-Office",
+              title: "CS Soc and IT Soc Office",
+              panorama: "/panoramic-images/CS-intersection-1st.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-dcs-entrance",
+                  pitch: "-5deg",
+                  yaw: "174deg",
+                  target: "dcs-entrance",
+                  label: "DCS Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100C-entrance",
+                  pitch: "-5deg",
+                  yaw: "87deg",
+                  target: "100C-entrance",
+                  label: "100C Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100C-entrance": {
+              id: "100C-entrance",
+              title: "100C Entrance",
+              panorama: "/panoramic-images/100C-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-CS-Soc-and-IT-Soc-Office",
+                  pitch: "-5deg",
+                  yaw: "-10deg",
+                  target: "CS-Soc-and-IT-Soc-Office",
+                  label: "CS Soc and IT Soc Office",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100D-entrance",
+                  pitch: "-5deg",
+                  yaw: "-188deg",
+                  target: "100D-entrance",
+                  label: "100D Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100C",
+                  pitch: "-5deg",
+                  yaw: "83deg",
+                  target: "100C",
+                  label: "100C",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100C": {
+              id: "100C",
+              title: "100C",
+              panorama: "/panoramic-images/100C.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100C-entrance",
+                  pitch: "-5deg",
+                  yaw: "23deg",
+                  target: "100C-entrance",
+                  label: "100C Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100D-entrance": {
+              id: "100D-entrance",
+              title: "100D Entrance",
+              panorama: "/panoramic-images/100D-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100C-entrance",
+                  pitch: "-5deg",
+                  yaw: "95deg",
+                  target: "100C-entrance",
+                  label: "100C Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100E-entrance",
+                  pitch: "-5deg",
+                  yaw: "-85deg",
+                  target: "100E-entrance",
+                  label: "100E Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100D",
+                  pitch: "-5deg",
+                  yaw: "-178deg",
+                  target: "100D",
+                  label: "100D",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100D": {
+              id: "100D",
+              title: "100D",
+              panorama: "/panoramic-images/100D.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100D-entrance",
+                  pitch: "-5deg",
+                  yaw: "-178deg",
+                  target: "100D-entrance",
+                  label: "100D Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100E-entrance": {
+              id: "100E-entrance",
+              title: "100E Entrance",
+              panorama: "/panoramic-images/100E-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100D-entrance",
+                  pitch: "-5deg",
+                  yaw: "-20deg",
+                  target: "100D-entrance",
+                  label: "100D Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100F-entrance",
+                  pitch: "-5deg",
+                  yaw: "-202deg",
+                  target: "100F-entrance",
+                  label: "100F Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100E",
+                  pitch: "-5deg",
+                  yaw: "70deg",
+                  target: "100E",
+                  label: "100E",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100E": {
+              id: "100E",
+              title: "100E",
+              panorama: "/panoramic-images/100E.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100E-entrance",
+                  pitch: "-5deg",
+                  yaw: "70deg",
+                  target: "100E-entrance",
+                  label: "100E Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100F-entrance": {
+              id: "100F-entrance",
+              title: "100F Entrance",
+              panorama: "/panoramic-images/100F-entrance.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100E-entrance",
+                  pitch: "-5deg",
+                  yaw: "2deg",
+                  target: "100E-entrance",
+                  label: "100E Entrance",
+                  arrow: "up",
+                },
+                {
+                  id: "to-100F",
+                  pitch: "-5deg",
+                  yaw: "95deg",
+                  target: "100F",
+                  label: "100F",
+                  arrow: "up",
+                },
+              ],
+            },
+            "100F": {
+              id: "100F",
+              title: "100F",
+              panorama: "/panoramic-images/100F.JPG",
+              startYaw: "-90deg",
+              startPitch: "0deg",
+              arrows: [
+                {
+                  id: "to-100F-entrance",
+                  pitch: "-5deg",
+                  yaw: "95deg",
+                  target: "100F-entrance",
+                  label: "100F Entrance",
+                  arrow: "up",
+                },
+              ],
+            },
+          });
+          return;
+        }
+        const data = await response.json();
+        const scenesMap = data.data.reduce((acc: Record<SceneId, SceneConfig>, scene: any) => {
+          acc[scene.id] = scene;
+          return acc;
+        }, {});
+        setScenes(scenesMap);
+      } catch (error) {
+        console.error("Error fetching scenes:", error);
+        // Fallback scenes will be set above
+      } finally {
+        setScenesLoading(false);
+      }
+    };
+    fetchScenes();
+  }, []);
 
   useEffect(() => {
-    if (!is3D) {
+    if (!is3D || scenesLoading || Object.keys(scenes).length === 0) {
       return;
     }
 
@@ -301,7 +580,9 @@ export default function Tour() {
       }
 
       const buildMarkers = (sceneId: SceneId) => {
-        return SCENES[sceneId].arrows.map((arrow) => ({
+        const scene = scenes[sceneId];
+        if (!scene) return [];
+        return scene.arrows.map((arrow) => ({
           id: arrow.id,
           position: {
             pitch: arrow.pitch,
@@ -324,12 +605,15 @@ export default function Tour() {
         }));
       };
 
+      const lobbyScene = scenes["lobby"];
+      if (!lobbyScene) return;
+
       const viewer = new Viewer({
         container: containerRef.current,
-        panorama: SCENES["lobby"].panorama,
-        caption: SCENES["lobby"].title,
-        defaultYaw: SCENES["lobby"].startYaw,
-        defaultPitch: SCENES["lobby"].startPitch,
+        panorama: lobbyScene.panorama,
+        caption: lobbyScene.title,
+        defaultYaw: lobbyScene.startYaw,
+        defaultPitch: lobbyScene.startPitch,
         defaultZoomLvl: 0,
         mousewheel: true,
         plugins: [[MarkersPlugin, { markers: buildMarkers("lobby") }]],
@@ -347,18 +631,19 @@ export default function Tour() {
         }).marker;
         const targetScene = marker?.data?.targetScene;
 
-        if (!targetScene || targetScene === sceneRef.current) {
+        if (!targetScene || targetScene === sceneRef.current || !scenes[targetScene]) {
           return;
         }
 
         sceneRef.current = targetScene;
+        const targetSceneData = scenes[targetScene];
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- speed exists at runtime but is missing from PanoramaOptions type definitions
-        await viewer.setPanorama(SCENES[targetScene].panorama, {
-          caption: SCENES[targetScene].title,
+        await viewer.setPanorama(targetSceneData.panorama, {
+          caption: targetSceneData.title,
           position: {
-            yaw: SCENES[targetScene].startYaw,
-            pitch: SCENES[targetScene].startPitch,
+            yaw: targetSceneData.startYaw,
+            pitch: targetSceneData.startPitch,
           },
           zoom: 0,
           speed: "18rpm",
@@ -395,7 +680,7 @@ export default function Tour() {
         viewerRef.current = null;
       }
     };
-  }, [is3D]);
+  }, [is3D, scenes, scenesLoading]);
 
   return (
     <section className="px-6 pb-8 pt-4 md:px-10">
@@ -424,7 +709,7 @@ export default function Tour() {
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             <div ref={containerRef} className="h-[78vh] min-h-[420px] w-full" />
           </div>
-          {loading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
+          {loading || scenesLoading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
         </>
       ) : (
         <div className="space-y-4">

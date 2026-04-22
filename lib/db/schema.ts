@@ -110,6 +110,30 @@ export const activityLog = pgTable("activity_log", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Virtual Tour Scenes
+export const virtualTourScenes = pgTable("virtual_tour_scenes", {
+  id: text("id").primaryKey(), // Use text id like "lobby" for easy reference
+  title: text("title").notNull(),
+  panorama: text("panorama").notNull(), // Path to image, e.g., "/panoramic-images/lobby.JPG"
+  startYaw: text("start_yaw").notNull(), // e.g., "-70deg"
+  startPitch: text("start_pitch").notNull(), // e.g., "0deg"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Virtual Tour Arrows (connections between scenes)
+export const virtualTourArrows = pgTable("virtual_tour_arrows", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sceneId: text("scene_id").notNull().references(() => virtualTourScenes.id, { onDelete: "cascade" }),
+  arrowId: text("arrow_id").notNull(), // e.g., "to-dit-entrance"
+  pitch: text("pitch").notNull(), // e.g., "-4deg"
+  yaw: text("yaw").notNull(), // e.g., "-30deg"
+  targetSceneId: text("target_scene_id").notNull().references(() => virtualTourScenes.id, { onDelete: "cascade" }),
+  label: text("label").notNull(), // e.g., "DIT Entrance"
+  arrowDirection: text("arrow_direction", { enum: ["left", "right", "down", "up"] }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const equipmentCategoriesRelations = relations(equipmentCategories, ({ many }) => ({
   equipmentModels: many(equipmentModels),
@@ -147,6 +171,21 @@ export const usersRelations = relations(users, ({ many }) => ({
   roomReservations: many(roomReservations),
   borrowRequests: many(borrowRequests),
   activityLogs: many(activityLog),
+}));
+
+export const virtualTourScenesRelations = relations(virtualTourScenes, ({ many }) => ({
+  arrows: many(virtualTourArrows),
+}));
+
+export const virtualTourArrowsRelations = relations(virtualTourArrows, ({ one }) => ({
+  scene: one(virtualTourScenes, {
+    fields: [virtualTourArrows.sceneId],
+    references: [virtualTourScenes.id],
+  }),
+  targetScene: one(virtualTourScenes, {
+    fields: [virtualTourArrows.targetSceneId],
+    references: [virtualTourScenes.id],
+  }),
 }));
 
 export const roomReservationsRelations = relations(roomReservations, ({ one }) => ({
