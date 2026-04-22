@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { IconLoader2 } from "@tabler/icons-react";
 import { useRooms } from "@/hooks/useRooms";
 import { useRoomReservations } from "@/hooks/useRoomReservations";
@@ -10,17 +12,19 @@ import { mapRoomsToUI, splitRooms, type Room } from "@/components/features/reser
 import { FloorMap } from "@/components/features/reserve/FloorMap";
 import { RoomDialog } from "@/components/features/reserve/RoomDialog";
 
+const ROOM_TYPES = ["All", "Lecture", "HyFlex", "Lab Room"] as const;
+type RoomTypeFilter = (typeof ROOM_TYPES)[number];
+
 export default function ReserveRoom() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [typeFilter, setTypeFilter] = useState<RoomTypeFilter>("All");
 
-  // Fetch rooms and active reservations from Supabase
   const { rooms: rawRooms, loading: roomsLoading, refetch: refetchRooms } = useRooms();
   const { reservations: activeReservations, loading: resLoading, refetch: refetchReservations } =
     useRoomReservations("accepted");
 
   const loading = roomsLoading || resLoading;
 
-  // Auto-refresh when user returns to the page
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -28,14 +32,21 @@ export default function ReserveRoom() {
         refetchReservations();
       }
     };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [refetchRooms, refetchReservations]);
 
-  // Map to UI rooms with occupancy status
   const allRooms = mapRoomsToUI(rawRooms, activeReservations);
-  const { topRooms, bottomRooms } = splitRooms(allRooms);
+
+  // Split by floor
+  const floor1Rooms = allRooms.filter((r) => r.floor === "1st Floor");
+  const floor2Rooms = allRooms.filter((r) => r.floor === "2nd Floor");
+
+  // Apply type filter
+  function applyTypeFilter(rooms: Room[]) {
+    if (typeFilter === "All") return rooms;
+    return rooms.filter((r) => r.type.toLowerCase() === typeFilter.toLowerCase());
+  }
 
   const vacantCount = allRooms.filter((r) => r.status === "vacant").length;
   const occupiedCount = allRooms.filter((r) => r.status === "occupied").length;
@@ -44,6 +55,27 @@ export default function ReserveRoom() {
     refetchRooms();
     refetchReservations();
     setSelectedRoom(null);
+  }
+
+  function FloorContent({ rooms }: { rooms: Room[] }) {
+    const filtered = applyTypeFilter(rooms);
+    const { topRooms, bottomRooms } = splitRooms(filtered);
+
+    if (filtered.length === 0) {
+      return (
+        <div className="text-center py-16 text-muted-foreground text-sm">
+          No rooms match the selected filter.
+        </div>
+      );
+    }
+
+    return (
+      <FloorMap
+        topRooms={topRooms}
+        bottomRooms={bottomRooms}
+        onSelectRoom={setSelectedRoom}
+      />
+    );
   }
 
   return (
@@ -67,7 +99,8 @@ export default function ReserveRoom() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+
+        <CardContent className="space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <IconLoader2 className="size-5 animate-spin mr-2" /> Loading rooms...
@@ -78,14 +111,42 @@ export default function ReserveRoom() {
             </div>
           ) : (
             <>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Floor Plan — CCIS Building
-              </p>
-              <FloorMap
-                topRooms={topRooms}
-                bottomRooms={bottomRooms}
-                onSelectRoom={setSelectedRoom}
-              />
+              {/* Room type filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {ROOM_TYPES.map((type) => (
+                  <Button
+                    key={type}
+                    size="sm"
+                    variant={typeFilter === type ? "default" : "outline"}
+                    onClick={() => setTypeFilter(type)}
+                    className="h-7 text-xs"
+                  >
+                    {type}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Floor tabs */}
+              <Tabs defaultValue="floor1">
+                <TabsList>
+                  <TabsTrigger value="floor1">1st Floor</TabsTrigger>
+                  <TabsTrigger value="floor2">2nd Floor</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="floor1" className="mt-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Floor Plan — 1st Floor
+                  </p>
+                  <FloorContent rooms={floor1Rooms} />
+                </TabsContent>
+
+                <TabsContent value="floor2" className="mt-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    Floor Plan — 2nd Floor
+                  </p>
+                  <FloorContent rooms={floor2Rooms} />
+                </TabsContent>
+              </Tabs>
             </>
           )}
         </CardContent>
