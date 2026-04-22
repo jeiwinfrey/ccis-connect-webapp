@@ -25,6 +25,11 @@ export async function PUT(
       where: eq(borrowRequests.id, id),
       with: {
         user: true,
+        unit: {
+          with: {
+            model: true,
+          },
+        },
       },
     });
 
@@ -87,8 +92,14 @@ export async function PUT(
       if (validatedData.status === "accepted" || validatedData.status === "rejected") {
         try {
           const requesterPhone = existing.user?.phoneNumber;
+          const modelName = existing.unit?.model?.modelName ?? existing.unit?.unitId ?? "equipment";
           if (requesterPhone) {
-            await notifyRequesterBorrowDecision(requesterPhone, validatedData.status, existing.unitId);
+            await notifyRequesterBorrowDecision(
+              requesterPhone,
+              validatedData.status,
+              modelName,
+              validatedData.status === "rejected" ? validatedData.adminNotes : undefined,
+            );
           }
         } catch (smsError) {
           console.error("[SMS] Failed to notify requester about borrow decision:", smsError);

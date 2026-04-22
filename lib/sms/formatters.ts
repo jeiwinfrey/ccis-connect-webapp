@@ -19,11 +19,18 @@ export function formatRoomReservationAdminNotification(
 
 export function formatBorrowDecisionNotification(
   status: "accepted" | "rejected",
-  unitId: string
+  modelName: string,
+  reason?: string | null,
 ): string {
-  return status === "accepted"
-    ? `Your borrow request for unit ${unitId} has been accepted.`
-    : `Your borrow request for unit ${unitId} has been rejected.`;
+  if (status === "accepted") {
+    return `Your borrow request for ${modelName} has been accepted.`;
+  }
+
+  const trimmedReason = reason?.trim();
+
+  return trimmedReason
+    ? `Your borrow request for ${modelName} has been rejected. Reason: ${trimmedReason}`
+    : `Your borrow request for ${modelName} has been rejected.`;
 }
 
 export function formatRoomDecisionNotification(
