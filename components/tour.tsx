@@ -70,7 +70,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
         pitch: "-5deg",
         yaw: "70deg",
         target: "lobby",
-        label: "Lobby",
+        label: "Back to Lobby",
         arrow: "left",
       },
       {
