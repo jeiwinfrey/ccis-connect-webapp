@@ -1,9 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Switch } from "./ui/switch";
-import { Button } from "./ui/button";
-import Image from "next/image";
 
 type SceneId = string;
 type ArrowDirection = "left" | "right" | "down" | "up";
@@ -527,14 +524,8 @@ export default function Tour() {
   const viewerRef = useRef<{ destroy: () => void } | null>(null);
   const sceneRef = useRef<SceneId>("lobby");
   const [loading, setLoading] = useState(true);
-  const [is3D, setIs3D] = useState(true);
-  const [selectedFloor, setSelectedFloor] = useState<"1st" | "2nd">("1st");
 
   useEffect(() => {
-    if (!is3D) {
-      return;
-    }
-
     let mounted = true;
     let detachMarkerHandler: (() => void) | null = null;
 
@@ -605,7 +596,15 @@ export default function Tour() {
 
         sceneRef.current = targetScene;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- speed exists at runtime but is missing from PanoramaOptions type definitions
+        type PanoramaTransitionOptions = NonNullable<Parameters<typeof viewer.setPanorama>[1]> & {
+          caption: string;
+          position: { yaw: string; pitch: string };
+          zoom: number;
+          speed: string;
+          transition: { effect: "fade"; rotation: boolean; speed: number };
+          showLoader: boolean;
+        };
+
         await viewer.setPanorama(SCENES[targetScene].panorama, {
           caption: SCENES[targetScene].title,
           position: {
@@ -620,7 +619,7 @@ export default function Tour() {
             speed: 800,
           },
           showLoader: true,
-        } as any);
+        } as PanoramaTransitionOptions);
 
         // @ts-expect-error -- setMarkers exists at runtime but is missing from the plugin type definitions
         markersPlugin.setMarkers(buildMarkers(targetScene));
@@ -647,65 +646,21 @@ export default function Tour() {
         viewerRef.current = null;
       }
     };
-  }, [is3D]);
+  }, []);
 
   return (
     <section className="px-6 pb-8 pt-4 md:px-10">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
-          <p className="text-sm text-muted-foreground">
-            {is3D 
-              ? "Drag to look around, then click the arrow markers to move between scenes."
-              : "View the floor plan and navigate between floors."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-sm font-medium ${is3D ? "text-foreground" : "text-muted-foreground"}`}>
-            3D
-          </span>
-          <Switch checked={!is3D} onCheckedChange={(checked) => setIs3D(!checked)} />
-          <span className={`text-sm font-medium ${!is3D ? "text-foreground" : "text-muted-foreground"}`}>
-            2D
-          </span>
-        </div>
+      <div className="mb-3">
+        <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
+        <p className="text-sm text-muted-foreground">
+          Drag to look around, then click the arrow markers to move between scenes.
+        </p>
       </div>
 
-      {is3D ? (
-        <>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div ref={containerRef} className="h-[78vh] min-h-[420px] w-full" />
-          </div>
-          {loading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
-        </>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              variant={selectedFloor === "1st" ? "default" : "outline"}
-              onClick={() => setSelectedFloor("1st")}
-            >
-              1st Floor
-            </Button>
-            <Button
-              variant={selectedFloor === "2nd" ? "default" : "outline"}
-              onClick={() => setSelectedFloor("2nd")}
-            >
-              2nd Floor
-            </Button>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-            <div className="relative h-[78vh] min-h-[420px] w-full bg-muted">
-              <Image
-                src={selectedFloor === "1st" ? "/floor-plan/43111.png" : "/floor-plan/67235.png"}
-                alt={`${selectedFloor} Floor Plan`}
-                fill
-                className="object-contain p-4"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div ref={containerRef} className="h-[78vh] min-h-[420px] w-full" />
+      </div>
+      {loading && <p className="mt-3 text-sm text-muted-foreground">Loading 360 viewer...</p>}
 
       <style jsx>{`
         :global(.tour-scene-arrow) {
