@@ -116,12 +116,16 @@ export default function RoomManagement() {
       if (editing) {
         await mutations.updateRoom(editing.id, data);
         toast.success("Room updated");
+        setDialogOpen(false);
+        refetch();
       } else {
-        await mutations.createRoom(data);
-        toast.success("Room created");
+        const newRoom = await mutations.createRoom(data);
+        toast.success("Room created — set the schedule");
+        setDialogOpen(false);
+        refetch();
+        setScheduleRoom(newRoom);
+        loadAvailability(newRoom.id);
       }
-      setDialogOpen(false);
-      refetch();
     } catch (e) {
       console.error(e);
       toast.error("Failed to save room");
