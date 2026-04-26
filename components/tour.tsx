@@ -70,7 +70,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
         pitch: "-5deg",
         yaw: "70deg",
         target: "lobby",
-        label: "Back to Lobby",
+        label: "Lobby",
         arrow: "left",
       },
       {
@@ -137,7 +137,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "SC-Office",
     title: "SC Office",
     panorama: "/panoramic-images/IT-intersection-1st.JPG",
-    startYaw: "-90deg",
+    startYaw: "0deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -156,13 +156,46 @@ const SCENES: Record<SceneId, SceneConfig> = {
         label: "HyFlex 1 Entrance",
         arrow: "up",
       },
+      {
+        id: "to-IT-stairs",
+        pitch: "-5deg",
+        yaw: "0deg",
+        target: "IT-stairs",
+        label: "IT Stairs",
+        arrow: "up",
+      }
+    ],
+  },
+  "IT-stairs": {
+    id: "IT-stairs",
+    title: "IT Stairs",
+    panorama: "/panoramic-images/IT-stairs.JPG",
+    startYaw: "5deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-SC-office",
+        pitch: "-19deg",
+        yaw: "-3deg",
+        target: "SC-Office",
+        label: "SC Office",
+        arrow: "up",
+      },
+      {
+        id: "to-IT-intersection-2nd",
+        pitch: "8deg",
+        yaw: "35deg",
+        target: "IT-intersection-2nd",
+        label: "IT Intersection 2nd",
+        arrow: "up",
+      },
     ],
   },
   "100B-entrance": {
     id: "100B-entrance",
     title: "100B Entrance",
     panorama: "/panoramic-images/100B-entrance.JPG",
-    startYaw: "-90deg",
+    startYaw: "210deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -212,7 +245,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "100A-entrance",
     title: "100A Entrance",
     panorama: "/panoramic-images/100A-entrance.JPG",
-    startYaw: "-90deg",
+    startYaw: "180deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -316,6 +349,14 @@ const SCENES: Record<SceneId, SceneConfig> = {
         arrow: "up",
       },
       {
+        id: "to-cs-stairs",
+        pitch: "-5deg",
+        yaw: "-95deg",
+        target: "cs-stairs",
+        label: "CS Stairs",
+        arrow: "up",
+      },
+      {
         id: "to-100C-entrance",
         pitch: "-5deg",
         yaw: "87deg",
@@ -325,11 +366,485 @@ const SCENES: Record<SceneId, SceneConfig> = {
       },
     ],
   },
+  "cs-stairs": {
+    id: "cs-stairs",
+    title: "CS Stairs",
+    panorama: "/panoramic-images/CS-stairs.JPG",
+    startYaw: "130deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-CS-Soc-and-IT-Soc-Office",
+        pitch: "-19deg",
+        yaw: "153deg",
+        target: "CS-Soc-and-IT-Soc-Office",
+        label: "CS Soc and IT Soc Office",
+        arrow: "up",
+      },
+      {
+        id: "to-cs-intersection-2nd",
+        pitch: "8deg",
+        yaw: "120deg",
+        target: "cs-intersection-2nd",
+        label: "CS Intersection 2nd",
+        arrow: "up",
+      },
+    ],
+  },
+  "cs-intersection-2nd": {
+    id: "cs-intersection-2nd",
+    title: "CS Intersection 2nd Floor",
+    panorama: "/panoramic-images/CS-intersection-2nd.JPG",
+    startYaw: "-90deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-COD-entrance",
+        pitch: "-5deg",
+        yaw: "205deg",
+        target: "COD-entrance",
+        label: "COD Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-councelor-entrance",
+        pitch: "-5deg",
+        yaw: "117deg",
+        target: "councelor-entrance",
+        label: "Counselor Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-cs-stairs",
+        pitch: "-11deg",
+        yaw: "-35deg",
+        target: "cs-stairs",
+        label: "CS Stairs",
+        arrow: "up",
+      },
+    ],
+  },
+  "councelor-entrance": {
+    id: "councelor-entrance",
+    title: "Counselor Entrance",
+    panorama: "/panoramic-images/councelor-entrance.JPG",
+    startYaw: "117deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-cs-intersection-2nd",
+        pitch: "-5deg",
+        yaw: "-63deg",
+        target: "cs-intersection-2nd",
+        label: "CS Intersection 2nd",
+        arrow: "up",
+      },
+      {
+        id: "to-learning-commons-entrance",
+        pitch: "-5deg",
+        yaw: "117deg",
+        target: "learning-commons-entrance",
+        label: "Learning Commons Entrance",
+        arrow: "up",
+      }
+    ],
+  },
+  "learning-commons-entrance": {
+    id: "learning-commons-entrance",
+    title: "Learning Commons Entrance",
+    panorama: "/panoramic-images/learning-commons-entrance.JPG",
+    startYaw: "0deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-councelor-entrance",
+        pitch: "-5deg",
+        yaw: "-85deg",
+        target: "councelor-entrance",
+        label: "Counselor Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-learning-commons",
+        pitch: "-5deg",
+        yaw: "5deg",
+        target: "learning-commons",
+        label: "Learning Commons",
+        arrow: "up",
+      }
+    ],
+  },
+  "learning-commons": {
+    id: "learning-commons",
+    title: "Learning Commons",
+    panorama: "/panoramic-images/learning-commons.JPG",
+    startYaw: "90deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-learning-commons-entrance",
+        pitch: "-5deg",
+        yaw: "-80deg",
+        target: "learning-commons-entrance",
+        label: "Learning Commons Entrance",
+        arrow: "up",
+      }
+    ],
+  },
+  "COD-entrance": {
+    id: "COD-entrance",
+    title: "COD Entrance",
+    panorama: "/panoramic-images/COD-entrance.JPG",
+    startYaw: "25deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room6-entrance",
+        pitch: "-5deg",
+        yaw: "25deg",
+        target: "room6-entrance",
+        label: "Room 6 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-cs-intersection-2nd",
+        pitch: "-5deg",
+        yaw: "200deg",
+        target: "cs-intersection-2nd",
+        label: "CS Intersection 2nd",
+        arrow: "up",
+      },
+    ],
+  },
+  "room6-entrance": {
+    id: "room6-entrance",
+    title: "Room 6 Entrance",
+    panorama: "/panoramic-images/room6-entrance.JPG",
+    startYaw: "15deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "room5-entrance",
+        pitch: "-5deg",
+        yaw: "15deg",
+        target: "room5-entrance",
+        label: "Room 5 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-cod-entrance",
+        pitch: "-5deg",
+        yaw: "195deg",
+        target: "COD-entrance",
+        label: "COD Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room6",
+        pitch: "-5deg",
+        yaw: "110deg",
+        target: "room3",
+        label: "Room 6",
+        arrow: "up",
+      },
+    ],
+  },
+  "room5-entrance": {
+    id: "room5-entrance",
+    title: "Room 5 Entrance",
+    panorama: "/panoramic-images/room5-entrance.JPG",
+    startYaw: "5deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room6-entrance",
+        pitch: "-5deg",
+        yaw: "183deg",
+        target: "room6-entrance",
+        label: "Room 6 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room4-entrance",
+        pitch: "-5deg",
+        yaw: "5deg",
+        target: "room4-entrance",
+        label: "Room 4 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room5",
+        pitch: "-5deg",
+        yaw: "90deg",
+        target: "room4",
+        label: "Room 5",
+        arrow: "up",
+      }
+    ],
+  },
+  "room4-entrance": {
+    id: "room4-entrance",
+    title: "Room 4 Entrance",
+    panorama: "/panoramic-images/room4-entrance.JPG",
+    startYaw: "67deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room5-entrance",
+        pitch: "-5deg",
+        yaw: "247deg",
+        target: "room5-entrance",
+        label: "Room 5 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room3-entrance",
+        pitch: "-5deg",
+        yaw: "67deg",
+        target: "room3-entrance",
+        label: "Room 3 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room4",
+        pitch: "-5deg",
+        yaw: "157deg",
+        target: "room4",
+        label: "Room 4",
+        arrow: "up",
+      }
+    ],
+  },
+  "room4": {
+    id: "room4",
+    title: "Room 4",
+    panorama: "/panoramic-images/room4.JPG",
+    startYaw: "-25deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room4-entrance",
+        pitch: "-5deg",
+        yaw: "43deg",
+        target: "room4-entrance",
+        label: "Room 4 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "room3-entrance": {
+    id: "room3-entrance",
+    title: "Room 3 Entrance",
+    panorama: "/panoramic-images/room3-entrance.JPG",
+    startYaw: "0deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room4-entrance",
+        pitch: "-5deg",
+        yaw: "170deg",
+        target: "room4-entrance",
+        label: "Room 4 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-hyflex2-entrance",
+        pitch: "-5deg",
+        yaw: "-10deg",
+        target: "hyflex2-entrance",
+        label: "HyFlex 2 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room3",
+        pitch: "-5deg",
+        yaw: "83deg",
+        target: "room3",
+        label: "Room 3",
+        arrow: "up",
+      }
+    ],
+  },
+  "room3": {
+    id: "room3",
+    title: "Room 3",
+    panorama: "/panoramic-images/room3.JPG",
+    startYaw: "45deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room3-entrance",
+        pitch: "-5deg",
+        yaw: "-90deg",
+        target: "room3-entrance",
+        label: "Room 3 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "hyflex2-entrance": {
+    id: "hyflex2-entrance",
+    title: "HyFlex 2 Entrance",
+    panorama: "/panoramic-images/hyflex2-entrance.JPG",
+    startYaw: "0deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-hyflex2",
+        pitch: "-5deg",
+        yaw: "130deg",
+        target: "hyflex1",
+        label: "HyFlex 2",
+        arrow: "up",
+      },
+      {
+        id: "to-room3-entrance",
+        pitch: "-5deg",
+        yaw: "-145deg",
+        target: "room3-entrance",
+        label: "Room 3 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-IT-intersection-2nd",
+        pitch: "-5deg",
+        yaw: "40deg",
+        target: "IT-intersection-2nd",
+        label: "IT Intersection 2nd",
+        arrow: "up",
+      },
+    ],
+  },
+  "IT-intersection-2nd": {
+    id: "IT-intersection-2nd",
+    title: "IT Intersection 2nd",
+    panorama: "/panoramic-images/IT-intersection-2nd.JPG",
+    startYaw: "-100deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-hyflex2-entrance",
+        pitch: "-5deg",
+        yaw: "-145deg",
+        target: "hyflex2-entrance",
+        label: "HyFlex 2 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room2-entrance",
+        pitch: "-5deg",
+        yaw: "-55deg",
+        target: "room2-entrance",
+        label: "Room 2 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-IT-stairs",
+        pitch: "-11deg",
+        yaw: "90deg",
+        target: "IT-stairs",
+        label: "IT Stairs",
+        arrow: "up",
+      }
+    ],
+    },
+  "room2-entrance": {
+    id: "room2-entrance",
+    title: "Room 2 Entrance",
+    panorama: "/panoramic-images/room2-entrance.JPG",
+    startYaw: "0deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-IT-intersection-2nd",
+        pitch: "-5deg",
+        yaw: "-123deg",
+        target: "IT-intersection-2nd",
+        label: "IT Intersection 2nd",
+        arrow: "up",
+      },
+      {
+        id: "to-room1-entrance",
+        pitch: "-5deg",
+        yaw: "60deg",
+        target: "room1-entrance",
+        label: "Room 1 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room2",
+        pitch: "-5deg",
+        yaw: "153deg",
+        target: "room2",
+        label: "Room 2",
+        arrow: "up",
+      }
+    ],
+  },
+  "room2": {
+    id: "room2",
+    title: "Room 2",
+    panorama: "/panoramic-images/room2.JPG",
+    startYaw: "-90deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room2-entrance",
+        pitch: "-5deg",
+        yaw: "-108deg",
+        target: "room2-entrance",
+        label: "Room 2 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "room1-entrance": {
+    id: "room1-entrance",
+    title: "Room 1 Entrance",
+    panorama: "/panoramic-images/room1-entrance.JPG",
+    startYaw: "0deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room2-entrance",
+        pitch: "-5deg",
+        yaw: "-103deg",
+        target: "room2-entrance",
+        label: "Room 2 Entrance",
+        arrow: "up",
+      },
+      {
+        id: "to-room1",
+        pitch: "-5deg",
+        yaw: "168deg",
+        target: "room1",
+        label: "Room 1",
+        arrow: "up",
+      }
+    ],
+  },
+  "room1": {
+    id: "room1",
+    title: "Room 1",
+    panorama: "/panoramic-images/room1.JPG",
+    startYaw: "-90deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room1-entrance",
+        pitch: "-5deg",
+        yaw: "-108deg",
+        target: "room1-entrance",
+        label: "Room 1 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
   "100C-entrance": {
     id: "100C-entrance",
     title: "100C Entrance",
     panorama: "/panoramic-images/100C-entrance.JPG",
-    startYaw: "-90deg",
+    startYaw: "-188deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -379,7 +894,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "100D-entrance",
     title: "100D Entrance",
     panorama: "/panoramic-images/100D-entrance.JPG",
-    startYaw: "-90deg",
+    startYaw: "-85deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -429,7 +944,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "100E-entrance",
     title: "100E Entrance",
     panorama: "/panoramic-images/100E-entrance.JPG",
-    startYaw: "-90deg",
+    startYaw: "-202deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -468,7 +983,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
       {
         id: "to-100E-entrance",
         pitch: "-5deg",
-        yaw: "70deg",
+        yaw: "93deg",
         target: "100E-entrance",
         label: "100E Entrance",
         arrow: "up",
@@ -479,7 +994,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "100F-entrance",
     title: "100F Entrance",
     panorama: "/panoramic-images/100F-entrance.JPG",
-    startYaw: "-90deg",
+    startYaw: "95deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -526,6 +1041,7 @@ export default function Tour() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+
     let mounted = true;
     let detachMarkerHandler: (() => void) | null = null;
 
@@ -596,15 +1112,7 @@ export default function Tour() {
 
         sceneRef.current = targetScene;
 
-        type PanoramaTransitionOptions = NonNullable<Parameters<typeof viewer.setPanorama>[1]> & {
-          caption: string;
-          position: { yaw: string; pitch: string };
-          zoom: number;
-          speed: string;
-          transition: { effect: "fade"; rotation: boolean; speed: number };
-          showLoader: boolean;
-        };
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- speed exists at runtime but is missing from PanoramaOptions type definitions
         await viewer.setPanorama(SCENES[targetScene].panorama, {
           caption: SCENES[targetScene].title,
           position: {
@@ -619,7 +1127,7 @@ export default function Tour() {
             speed: 800,
           },
           showLoader: true,
-        } as PanoramaTransitionOptions);
+        } as any);
 
         // @ts-expect-error -- setMarkers exists at runtime but is missing from the plugin type definitions
         markersPlugin.setMarkers(buildMarkers(targetScene));
@@ -650,11 +1158,13 @@ export default function Tour() {
 
   return (
     <section className="px-6 pb-8 pt-4 md:px-10">
-      <div className="mb-3">
-        <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
-        <p className="text-sm text-muted-foreground">
-          Drag to look around, then click the arrow markers to move between scenes.
-        </p>
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Virtual Tour</h1>
+          <p className="text-sm text-muted-foreground">
+            Drag to look around, then click the arrow markers to move between scenes.
+          </p>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
