@@ -16,6 +16,7 @@ export interface Room {
   type: string;
   capacity: string;
   floor: string;
+  notes: string;
   status: "vacant" | "occupied";
 }
 
@@ -60,6 +61,7 @@ export function mapRoomsToUI(
     type: room.type,
     capacity: room.capacity,
     floor: room.floor,
+    notes: room.notes ?? "",
     status: occupiedRoomIds.has(room.id) ? "occupied" : "vacant",
   }));
 }

@@ -514,6 +514,13 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
               ))}
             </div>
 
+            {room.notes && room.notes.trim() !== "" && (
+              <div className="bg-muted rounded-lg p-3 mt-2">
+                <p className="text-xs text-muted-foreground">Notes</p>
+                <p className="font-semibold text-sm">{room.notes}</p>
+              </div>
+            )}
+
             <p className="text-sm text-muted-foreground mt-4">
               Would you like to make a reservation for this room?
             </p>
