@@ -64,9 +64,15 @@ export function UnitPickerDialog({
         <div className="px-6 py-4 space-y-5 max-h-[60vh] overflow-y-auto">
           {availableUnits.length > 0 && (
               <div className="space-y-2" role="radiogroup" aria-label="Available units">
-              <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                Available ({availableUnits.length})
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                  Available ({availableUnits.length})
+                </p>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Condition</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide w-[78px] text-center">Status</span>
+                </div>
+              </div>
               {availableUnits.map((unit) => (
                 <button
                   key={unit.unitId}
