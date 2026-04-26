@@ -49,6 +49,23 @@ export default function EquipmentOnLoan() {
     }
   }
 
+  async function handleMarkAllReturned() {
+    const borrowIds = filtered
+      .map((row) => borrowMap.get(row.id)?.id)
+      .filter((id): id is string => !!id);
+    if (borrowIds.length === 0) return;
+    try {
+      await Promise.all(
+        borrowIds.map((id) => mutations.updateBorrowRequest(id, { status: "returned" }))
+      );
+      refetch();
+      toast.success(`Marked ${borrowIds.length} item${borrowIds.length > 1 ? "s" : ""} as returned`);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to mark all as returned");
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8">
       <div className="space-y-1">
@@ -63,6 +80,16 @@ export default function EquipmentOnLoan() {
             On Loan
             <Badge variant="outline" className="text-orange-600 border-orange-300 bg-orange-50 rounded-full px-2 py-0.5 text-xs">{filtered.length}</Badge>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs"
+            onClick={handleMarkAllReturned}
+            disabled={filtered.length === 0 || mutations.loading}
+          >
+            <IconRotateClockwise className="size-3.5" />
+            Mark All Returned
+          </Button>
         </div>
         <div className="p-5 space-y-4">
           <Input
