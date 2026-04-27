@@ -670,7 +670,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "room3-entrance",
     title: "Room 3 Entrance",
     panorama: "/panoramic-images/room3-entrance.JPG",
-    startYaw: "0deg",
+    startYaw: "170deg",
     startPitch: "0deg",
     arrows: [
       {
@@ -703,7 +703,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
     id: "room3",
     title: "Room 3",
     panorama: "/panoramic-images/room3.JPG",
-    startYaw: "45deg",
+    startYaw: "-45deg",
     startPitch: "0deg",
     arrows: [
       {
