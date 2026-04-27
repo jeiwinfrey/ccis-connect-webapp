@@ -543,7 +543,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
         id: "to-room6",
         pitch: "-5deg",
         yaw: "110deg",
-        target: "room3",
+        target: "room6",
         label: "Room 6",
         arrow: "up",
       },
@@ -576,7 +576,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
         id: "to-room5",
         pitch: "-5deg",
         yaw: "90deg",
-        target: "room4",
+        target: "room5",
         label: "Room 5",
         arrow: "up",
       }
@@ -613,6 +613,40 @@ const SCENES: Record<SceneId, SceneConfig> = {
         label: "Room 4",
         arrow: "up",
       }
+    ],
+  },
+  "room5": {
+    id: "room5",
+    title: "Room 5",
+    panorama: "/panoramic-images/room4.JPG",
+    startYaw: "-25deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room5-entrance",
+        pitch: "-5deg",
+        yaw: "43deg",
+        target: "room5-entrance",
+        label: "Room 5 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
+  "room6": {
+    id: "room6",
+    title: "Room 6",
+    panorama: "/panoramic-images/room3.JPG",
+    startYaw: "45deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-room6-entrance",
+        pitch: "-5deg",
+        yaw: "-90deg",
+        target: "room6-entrance",
+        label: "Room 6 Entrance",
+        arrow: "up",
+      },
     ],
   },
   "room4": {
@@ -682,6 +716,23 @@ const SCENES: Record<SceneId, SceneConfig> = {
       },
     ],
   },
+  "hyflex2": {
+    id: "hyflex2",
+    title: "HyFlex 2",
+    panorama: "/panoramic-images/hyflex1.JPG",
+    startYaw: "-90deg",
+    startPitch: "0deg",
+    arrows: [
+      {
+        id: "to-hyflex2-entrance",
+        pitch: "-5deg",
+        yaw: "94deg",
+        target: "hyflex2-entrance",
+        label: "HyFlex 2 Entrance",
+        arrow: "up",
+      },
+    ],
+  },
   "hyflex2-entrance": {
     id: "hyflex2-entrance",
     title: "HyFlex 2 Entrance",
@@ -693,7 +744,7 @@ const SCENES: Record<SceneId, SceneConfig> = {
         id: "to-hyflex2",
         pitch: "-5deg",
         yaw: "130deg",
-        target: "hyflex1",
+        target: "hyflex2",
         label: "HyFlex 2",
         arrow: "up",
       },
