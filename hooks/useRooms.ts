@@ -63,6 +63,45 @@ export function useRoomAvailability(roomId: string | null) {
 }
 
 // ---------------------------------------------------------------------------
+// All rooms availability (bulk fetch)
+// ---------------------------------------------------------------------------
+
+export function useAllRoomAvailability(roomIds: string[]) {
+  const [availabilityMap, setAvailabilityMap] = useState<Record<string, RoomAvailability[]>>({});
+  const [loading, setLoading] = useState(false);
+
+  const idsKey = roomIds.slice().sort().join(",");
+
+  const fetch = useCallback(async () => {
+    if (roomIds.length === 0) { setAvailabilityMap({}); return; }
+    setLoading(true);
+    try {
+      const results = await Promise.all(
+        roomIds.map(async (id) => {
+          const res = await window.fetch(`/api/rooms/${id}/availability`);
+          if (!res.ok) return { id, slots: [] as RoomAvailability[] };
+          const json = await res.json();
+          const slots = Array.isArray(json) ? json : json.data ?? [];
+          return { id, slots };
+        })
+      );
+      const map: Record<string, RoomAvailability[]> = {};
+      for (const r of results) map[r.id] = r.slots;
+      setAvailabilityMap(map);
+    } catch {
+      setAvailabilityMap({});
+    } finally {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey]);
+
+  useEffect(() => { fetch(); }, [fetch]);
+
+  return { availabilityMap, loading, refetch: fetch };
+}
+
+// ---------------------------------------------------------------------------
 // Available rooms for a time slot
 // ---------------------------------------------------------------------------
 

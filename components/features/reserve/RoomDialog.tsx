@@ -28,6 +28,9 @@ interface RoomDialogProps {
   open: boolean;
   onClose: () => void;
   onReservationComplete?: () => void;
+  initialDayOfWeek?: number;
+  initialStartTime?: number;
+  initialEndTime?: number;
 }
 
 const DAYS_OF_WEEK = [
@@ -36,7 +39,6 @@ const DAYS_OF_WEEK = [
   { value: 3, label: "Wednesday" },
   { value: 4, label: "Thursday" },
   { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
 ];
 
 function getNextDateForDay(dayOfWeek: number): string {
@@ -171,16 +173,16 @@ function toTimeString(hour: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomDialogProps) {
+export function RoomDialog({ room, open, onClose, onReservationComplete, initialDayOfWeek, initialStartTime, initialEndTime }: RoomDialogProps) {
   const { user } = useAuth();
   const mutations = useRoomReservationMutations();
   const { availability } = useRoomAvailability(room?.id ?? null);
   const [step, setStep] = useState<"info" | "form" | "confirmed">("info");
 
   // Form state
-  const [dayOfWeek, setDayOfWeek] = useState<number | null>(null);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [endTime, setEndTime] = useState<number | null>(null);
+  const [dayOfWeek, setDayOfWeek] = useState<number | null>(initialDayOfWeek ?? null);
+  const [startTime, setStartTime] = useState<number | null>(initialStartTime ?? null);
+  const [endTime, setEndTime] = useState<number | null>(initialEndTime ?? null);
   const [purpose, setPurpose] = useState("");
   const [availabilityCheck, setAvailabilityCheck] = useState<"idle" | "checking" | "available" | "unavailable">("idle");
 
@@ -241,9 +243,9 @@ export function RoomDialog({ room, open, onClose, onReservationComplete }: RoomD
 
   function resetForm() {
     setStep("info");
-    setDayOfWeek(null);
-    setStartTime(null);
-    setEndTime(null);
+    setDayOfWeek(initialDayOfWeek ?? null);
+    setStartTime(initialStartTime ?? null);
+    setEndTime(initialEndTime ?? null);
     setPurpose("");
     setAvailabilityCheck("idle");
   }

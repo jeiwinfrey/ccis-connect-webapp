@@ -1,6 +1,6 @@
 "use client";
 
-import type { Room as SupabaseRoom, RoomReservationWithDetails } from "@/lib/db/types";
+import type { Room as SupabaseRoom, RoomAvailability, RoomReservationWithDetails } from "@/lib/db/types";
 
 // Re-export Supabase Room type
 export type { SupabaseRoom };
@@ -24,46 +24,74 @@ export interface Room {
 // Mapper: Supabase rooms + active reservations → UI rooms
 // ---------------------------------------------------------------------------
 
+export interface TimeFilter {
+  dayOfWeek: number;   // 0=Sunday ... 6=Saturday
+  startHour: number;   // decimal hours, e.g. 8.5 = 8:30 AM
+  endHour: number;     // decimal hours, e.g. 10 = 10:00 AM
+  date: string;        // YYYY-MM-DD for reservation conflict check
+}
+
 export function mapRoomsToUI(
   rooms: SupabaseRoom[],
   activeReservations: RoomReservationWithDetails[] = [],
+  availabilityMap: Record<string, RoomAvailability[]> = {},
+  timeFilter?: TimeFilter,
 ): Room[] {
-  // Build a set of room_ids that currently have an active (accepted) reservation
   const now = new Date();
+  const day = timeFilter?.dayOfWeek ?? now.getDay();
+  const startH = timeFilter?.startHour ?? (now.getHours() + now.getMinutes() / 60);
+  const endH = timeFilter?.endHour ?? (startH + 0.5);
+  const filterDate = timeFilter?.date ?? now.toISOString().slice(0, 10);
+
   const occupiedRoomIds = new Set<string>();
 
   for (const res of activeReservations) {
     if (res.status !== "accepted") continue;
 
-    // Check if the reservation is currently active
-    const resDate = new Date(res.reservationDate);
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const reservationDay = new Date(resDate.getFullYear(), resDate.getMonth(), resDate.getDate());
+    const resDate = typeof res.reservationDate === "string"
+      ? res.reservationDate.slice(0, 10)
+      : new Date(res.reservationDate).toISOString().slice(0, 10);
 
-    if (reservationDay.getTime() === today.getTime()) {
-      // Check time overlap with current time
-      const [startH, startM] = res.startTime.split(":").map(Number);
-      const [endH, endM] = res.endTime.split(":").map(Number);
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const startMinutes = startH * 60 + (startM || 0);
-      const endMinutes = endH * 60 + (endM || 0);
+    if (resDate === filterDate) {
+      const [rStartH, rStartM] = res.startTime.split(":").map(Number);
+      const [rEndH, rEndM] = res.endTime.split(":").map(Number);
+      const resStart = rStartH + (rStartM || 0) / 60;
+      const resEnd = rEndH + (rEndM || 0) / 60;
 
-      if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+      // Overlap check: reservation overlaps if it starts before our end AND ends after our start
+      if (resStart < endH && resEnd > startH) {
         occupiedRoomIds.add(res.roomId);
       }
     }
   }
 
-  return rooms.map((room) => ({
-    id: room.id,
-    roomNumber: room.roomNumber,
-    name: room.name,
-    type: room.type,
-    capacity: room.capacity,
-    floor: room.floor,
-    notes: room.notes ?? "",
-    status: occupiedRoomIds.has(room.id) ? "occupied" : "vacant",
-  }));
+  return rooms.map((room) => {
+    const slots = availabilityMap[room.id] ?? [];
+    // Room is scheduled if any slot on this day covers the entire requested range
+    const isScheduled = slots.some(
+      (s) => s.dayOfWeek === day && s.startHour <= startH && s.endHour >= endH,
+    );
+
+    let status: "vacant" | "occupied";
+    if (!isScheduled) {
+      status = "occupied";
+    } else if (occupiedRoomIds.has(room.id)) {
+      status = "occupied";
+    } else {
+      status = "vacant";
+    }
+
+    return {
+      id: room.id,
+      roomNumber: room.roomNumber,
+      name: room.name,
+      type: room.type,
+      capacity: room.capacity,
+      floor: room.floor,
+      notes: room.notes ?? "",
+      status,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
